@@ -1,0 +1,12 @@
+{
+  "updatedFiles": [
+    {
+      "fileName": "example.ts",
+      "contentSnippet": "// Implement a simple TypeScript function\n\nfunction greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n\n// Example usage:\nconsole.log(greet('World')); // Output: Hello, World!"
+    }
+  ],
+  "toolUsages": [],
+  "questions": [],
+  "isTaskComplete": false,
+  "completionReason": null
+}

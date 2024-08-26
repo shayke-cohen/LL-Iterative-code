@@ -11,9 +11,11 @@ export interface ToolUsage {
 }
 
 export interface LLMResponse {
-  updatedFiles: File[];
   toolUsages: ToolUsage[];
   questions?: string[];
+  isTaskComplete: boolean;
+  completionReason?: string;
+  actionsSummary: string;  // Add this line
 }
 
 export abstract class LLMInterface {
@@ -117,8 +119,6 @@ ${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${result}`).joi
 Task History:
 ${history.join('\n')}
 
-${this.generateToolInstructions()}
-
 Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
 
 {
@@ -140,8 +140,15 @@ Based on this information, please generate or update the TypeScript code. Your r
   ],
   "questions": [
     "Any questions for the user, if applicable"
-  ]
+  ],
+  "isTaskComplete": false,
+  "completionReason": "If isTaskComplete is true, provide a reason here"
 }
+
+Important Instructions:
+1. If you have any questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+2. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+3. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
 
 Ensure that your response is a valid JSON string.
 `;
@@ -162,8 +169,6 @@ ${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${result}`).joi
 Task History:
 ${history.join('\n')}
 
-${this.generateToolInstructions()}
-
 Based on this information, please analyze the results and provide feedback. Your response should be a JSON object with the following structure:
 
 {
@@ -173,20 +178,17 @@ Based on this information, please analyze the results and provide feedback. Your
       "contentSnippet": "// Updated TypeScript code here, if any changes are needed"
     }
   ],
-  "toolUsages": [
-    {
-      "name": "toolName",
-      "params": {
-        "param1": "value1",
-        "param2": "value2"
-      },
-      "reasoning": "Explanation for using this tool"
-    }
-  ],
-  "questions": [
-    "Any questions for the user, if applicable"
-  ]
+  "toolUsages": [],
+  "questions": [],
+  "isTaskComplete": false,
+  "completionReason": null
 }
+
+Important Instructions:
+1. Do not include any questions in the "questions" array. Leave it empty.
+2. Do not suggest any tool usages. Leave the "toolUsages" array empty.
+3. Always set "isTaskComplete" to false and "completionReason" to null.
+4. Focus on providing analysis and feedback through the "updatedFiles" array if any code changes are needed based on the tool results.
 
 Ensure that your response is a valid JSON string.
 `;

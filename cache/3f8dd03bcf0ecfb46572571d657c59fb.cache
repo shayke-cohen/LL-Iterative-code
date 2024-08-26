@@ -1,0 +1,16 @@
+{
+  "updatedFiles": [
+    {
+      "fileName": "example.ts",
+      "contentSnippet": "// Implement a simple TypeScript function\n\nfunction greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n\n// Example usage:\n// console.log(greet('Alice')); // Output: Hello, Alice!"
+    }
+  ],
+  "toolUsages": [],
+  "questions": [
+    "Is there a specific functionality you'd like the function to perform?",
+    "Should the function take any additional parameters?",
+    "Do you want to include any error handling or input validation in the function?"
+  ],
+  "isTaskComplete": false,
+  "completionReason": ""
+}

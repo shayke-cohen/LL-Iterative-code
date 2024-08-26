@@ -1,0 +1,21 @@
+{
+  "updatedFiles": [
+    {
+      "fileName": "example.ts",
+      "contentSnippet": "// Implement a simple TypeScript function
+
+function greet(name: string): string {
+  return `Hello, ${name}!`;
+}
+
+// Example usage:
+console.log(greet('World')); // Output: Hello, World!"
+    }
+  ],
+  "toolUsages": [],
+  "questions": [
+    "1. Would you like to add any additional parameters to the greet function?",
+    "2. Should we implement any error handling for empty or invalid input?"
+  ],
+  "isTaskComplete": false
+}

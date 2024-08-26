@@ -1,0 +1,13 @@
+{
+  "updatedFiles": [
+    {
+      "fileName": "example.ts",
+      "contentSnippet": "function greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n\nfunction calculateAverage(numbers: number[]): number {\n  if (numbers.length === 0) return 0;\n  const sum = numbers.reduce((acc, num) => acc + num, 0);\n  return sum / numbers.length;\n}\n\nexport { greet, calculateAverage };"
+    }
+  ],
+  "toolUsages": [],
+  "questions": [],
+  "isTaskComplete": true,
+  "completionReason": "The task has been completed successfully. The calculateAverage function has been implemented and added to the example.ts file, and both functions are now exported.",
+  "actionsSummary": "Updated the example.ts file to include the new calculateAverage function and modified the export statement to include both greet and calculateAverage functions."
+}

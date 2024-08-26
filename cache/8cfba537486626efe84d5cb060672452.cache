@@ -1,0 +1,13 @@
+{
+  "updatedFiles": [
+    {
+      "fileName": "example.ts",
+      "contentSnippet": "function greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n\nexport default greet;"
+    }
+  ],
+  "toolUsages": [],
+  "questions": [],
+  "isTaskComplete": true,
+  "completionReason": "The existing TypeScript function in example.ts already meets all the requirements. No modifications were necessary.",
+  "actionsSummary": "Reviewed the existing code in example.ts and confirmed that it correctly implements the required TypeScript function without any need for changes."
+}
