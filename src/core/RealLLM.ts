@@ -4,12 +4,13 @@ import { Logger } from './Logger';
 import { runPrompt } from './runPrompt';
 
 export class RealLLM extends LLMInterface {
-
+  
+  private lastAnalysisRecommendations: string = '';
   private additionalClarifications: { question: string; answer: string }[] = [];
 
-  async generateCode(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse> {
+  async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
-      const prompt = this.generateCodePrompt(task, toolResults, history);
+      const prompt = this.generateCodePrompt(task, toolResults);
       Logger.log("Generating code prompt:\n" + prompt);
 
       try {
@@ -44,9 +45,9 @@ export class RealLLM extends LLMInterface {
     });
   }
 
-  async analyzeResults(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse> {
+  async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
-      const prompt = this.generateAnalysisPrompt(task, toolResults, history);
+      const prompt = this.generateAnalysisPrompt(task, toolResults);
       
       try {
         const response = await runPrompt({
@@ -62,18 +63,38 @@ export class RealLLM extends LLMInterface {
 
         Logger.log("Received analyze response from LLM:\n " + response);
 
-        try {
-          const cleanedResponse = this.cleanJsonString(response);
-          let parsedResponse = this.parseResponse(cleanedResponse);
-          // Ensure actionsSummary is present
-          if (!parsedResponse.actionsSummary) {
-            parsedResponse.actionsSummary = "No actions summary provided";
-          }
-          return parsedResponse;
-        } catch (parseError) {
-          Logger.error("Failed to parse LLM response: "+ parseError);
-          throw new Error('Invalid response format from LLM');
+        // Store the analysis recommendations for the next generate prompt
+        this.lastAnalysisRecommendations = response;
+
+        // Parse the text response into the required LLMResponse format
+        const parsedResponse: LLMResponse = {
+          toolUsages: [],
+          questions: [],
+          isTaskComplete: false,
+          completionReason: undefined,
+          actionsSummary: response
+        };
+
+        // Check if the response indicates the task is complete
+        if (response.toLowerCase().includes("task is complete") || response.toLowerCase().includes("task has been completed")) {
+          parsedResponse.isTaskComplete = true;
+          parsedResponse.completionReason = "Analysis indicates task completion";
         }
+
+        // Extract any tool usages mentioned in the response
+        const toolMatches = response.match(/run\s+(['"])?(\w+)(['"])?\s+command/gi);
+        if (toolMatches) {
+          parsedResponse.toolUsages = toolMatches.map(match => {
+            const tool = match.replace(/run\s+(['"])?(\w+)(['"])?\s+command/i, '$2').toLowerCase();
+            return {
+              name: tool,
+              params: {},
+              reasoning: `Suggested by analysis to run ${tool}`
+            };
+          });
+        }
+
+        return parsedResponse;
       } catch (error) {
         Logger.error("Error in result analysis: " + error);
         throw error;
@@ -81,7 +102,7 @@ export class RealLLM extends LLMInterface {
     });
   }
 
-  protected generateCodePrompt(task: Task, toolResults: ToolResults, history: string[]): string {
+  protected generateCodePrompt(task: Task, toolResults: ToolResults): string {
     let prompt = `
 You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
 
@@ -97,14 +118,20 @@ ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).joi
     if (Object.keys(toolResults).length > 0) {
       prompt += `
 Previous Tool Results:
-${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${result}`).join('\n\n')}
+${Object.entries(toolResults).map(([tool, result]) => {
+  if (typeof result === 'object' && result !== null && 'stdout' in result) {
+    return `${tool}:\nstdout: ${result.stdout}\nstderr: ${result.stderr}\nerror: ${result.error || 'None'}`;
+  } else {
+    return `${tool}:\n${result}`;
+  }
+}).join('\n\n')}
 `;
     }
 
-    if (history.length > 0) {
+    if (this.lastAnalysisRecommendations) {
       prompt += `
-Task History:
-${history.join('\n')}
+Analysis Recommendations:
+${this.lastAnalysisRecommendations}
 `;
     }
 
@@ -147,12 +174,65 @@ Important Instructions:
      },
      "reasoning": "Explanation for updating this file"
    }
-2. If you have any questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
-3. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
-4. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
-5. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+2. To add a new package, use the "yarn add" tool with the following structure:
+   {
+     "name": "yarnAdd",
+     "params": {
+       "package": "package-name"
+     },
+     "reasoning": "Explanation for adding this package"
+   }
+3. If you have any questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+4. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+5. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
+6. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
 
 Ensure that your response is a valid JSON string.
+`;
+
+    return prompt;
+  }
+
+  protected generateAnalysisPrompt(task: Task, toolResults: ToolResults): string {
+    let prompt = `
+You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs. Here's the relevant information:
+
+Task Description: ${task.description}
+
+Current Working Files:
+${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+`;
+
+    if (Object.keys(toolResults).length > 0) {
+      prompt += `
+Tool Results:
+${Object.entries(toolResults).map(([tool, result]) => {
+  if (typeof result === 'object' && result !== null && 'stdout' in result) {
+    return `${tool}:\nstdout: ${result.stdout}\nstderr: ${result.stderr}\nerror: ${result.error || 'None'}`;
+  } else {
+    return `${tool}:\n${result}`;
+  }
+}).join('\n\n')}
+`;
+    }
+
+    prompt += `
+Based on this information, please provide a comprehensive analysis of the current state of the project. Your analysis should include:
+
+1. A summary of the current state of the project
+2. Any issues or errors identified from the tool results
+3. Suggestions for next steps or improvements
+4. An assessment of whether the task is complete or what remains to be done
+
+If you need to suggest running additional tools or making changes, you can mention them in your analysis. Available tools include:
+- yarn add [package-name]: To add a new package
+- yarn install: To install dependencies
+- yarn build: To build the project
+- yarn test: To run tests
+- tsc: To run the TypeScript compiler
+- eslint: To run the linter
+
+Your response should be a detailed text analysis. Do not format your response as JSON or include any specific JSON fields.
 `;
 
     return prompt;

@@ -134,6 +134,7 @@ async function main() {
 
   try {
     let isTaskComplete = false;
+    const llm = new RealLLM();
     while (iterationController.shouldContinue(isTaskComplete)) {
       iterationController.incrementIteration();
       Logger.log(`Starting iteration ${iterationController.getCurrentIteration()}`);
@@ -143,7 +144,7 @@ async function main() {
       task.workingFiles = await readFilesFromDisk(task.workingFiles.map(file => file.fileName), projectRoot);
 
       // Code Generation Phase
-      const codeGeneration = await llm.generateCode(task, {}, historyManager.getHistory());
+      const codeGeneration = await llm.generateCode(task, {});
 
       // Run tools including LLM-suggested actions
       const { results: toolResults, newFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
@@ -177,15 +178,8 @@ async function main() {
       // Update history with action summary
       historyManager.addEntry(iterationController.getCurrentIteration(), codeGeneration.actionsSummary);
 
-      // Check if task is complete
-      if (codeGeneration.isTaskComplete) {
-        Logger.log(`Task completed successfully. Reason: ${codeGeneration.completionReason}`);
-        isTaskComplete = true;
-        break;
-      }
-
-      // Analysis Phase
-      const analysis = await llm.analyzeResults(task, toolResults, historyManager.getHistory());
+      // Analysis Phase (always run)
+      const analysis = await llm.analyzeResults(task, toolResults);
 
       // Check if task is complete after analysis
       if (analysis.isTaskComplete) {
@@ -204,6 +198,9 @@ async function main() {
         task.relevantFiles = updatedFilesAfterAnalysis;
         task.workingFiles = updatedFilesAfterAnalysis;
       }
+
+      // Update history with analysis summary
+      historyManager.addEntry(iterationController.getCurrentIteration(), analysis.actionsSummary);
     }
 
     if (!isTaskComplete && iterationController.getCurrentIteration() >= 10) {

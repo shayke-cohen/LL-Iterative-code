@@ -1,7 +1,7 @@
 import { Task, File } from './TaskInitializer';
 
 export interface ToolResults {
-  [key: string]: string;
+  [key: string]: string | { stdout: string; stderr: string; error?: string };
 }
 
 export interface ToolUsage {
@@ -15,12 +15,12 @@ export interface LLMResponse {
   questions?: string[];
   isTaskComplete: boolean;
   completionReason?: string;
-  actionsSummary: string;  // Add this line
+  actionsSummary: string;
 }
 
 export abstract class LLMInterface {
-  abstract generateCode(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse>;
-  abstract analyzeResults(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse>;
+  abstract generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse>;
+  abstract analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse>;
 
   protected generateToolInstructions(): string {
     return `

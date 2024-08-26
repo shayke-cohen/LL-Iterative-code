@@ -16,17 +16,24 @@ export class ToolRunner {
     this.projectRoot = projectRoot;
   }
 
-  static async runCommand(command: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+  static async runCommand(command: string): Promise<{ stdout: string; stderr: string; error?: string }> {
+    // log the command to be executed
+    Logger.log(`Executing command: ${command}`);
+    return new Promise((resolve) => {
       exec(command, { cwd: this.projectRoot }, (error, stdout, stderr) => {
         if (error) {
           Logger.error(`Command execution failed: ${command}`);
           Logger.error(`Error: ${error.message}`);
           Logger.error(`stderr: ${stderr}`);
-          reject({ error: error.message, stderr });
+          Logger.error(`stdout: ${stdout}`);
+          resolve({ stdout, stderr, error: error.message });
         } else {
           Logger.log(`Command executed successfully: ${command}`);
-          resolve(stdout);
+          Logger.log(`stdout: ${stdout}`);
+          if (stderr) {
+            Logger.log(`stderr: ${stderr}`);
+          }
+          resolve({ stdout, stderr });
         }
       });
     });
@@ -36,36 +43,47 @@ export class ToolRunner {
     const results: ToolResults = {};
     let newFiles: File[] = [];
 
+    // Check if toolUsages is undefined or empty
+    if (!toolUsages || toolUsages.length === 0) {
+      Logger.log('No tool usages specified. Skipping tool execution.');
+      return { results, newFiles };
+    }
+
     // Execute specific tool usages
     for (const usage of toolUsages) {
       try {
-        const resultKey = `${usage.name}|${Object.entries(usage.params).map(([key, value]) => `${key}=${value}`).join(',')}`;
-        switch (usage.name) {
-          case 'moveFile':
+        if (!usage.name) {
+          Logger.error('Invalid tool usage: missing tool name');
+          continue;
+        }
+
+        const resultKey = `${usage.name}|${Object.entries(usage.params || {}).map(([key, value]) => `${key}=${value}`).join(',')}`;
+        
+        switch (usage.name.toLowerCase()) {
+          case 'movefile':
             results[resultKey] = this.fileManager.moveFile(usage.params.source, usage.params.destination) ? 'success' : 'failed';
             break;
-          case 'deleteFile':
+          case 'deletefile':
             results[resultKey] = this.fileManager.deleteFile(usage.params.fileName) ? 'success' : 'failed';
             break;
-          case 'updateFile':
+          case 'updatefile':
             results[resultKey] = this.fileManager.updateFile({fileName: usage.params.fileName, contentSnippet: usage.params.content}) ? 'success' : 'failed';
             break;
-          case 'requestFiles':
+          case 'requestfiles':
             const files = await this.requestFiles(usage.params.filePattern);
             newFiles = [...newFiles, ...files];
             results[resultKey] = `Found ${files.length} files matching pattern ${usage.params.filePattern}`;
             break;
-          case 'yarnInstall':
-            results[resultKey] = await this.runCommand('yarn install');
+          case 'yarn':
+          case 'yarninstall':
+          case 'yarnbuild':
+          case 'yarntest':
+          case 'removemodules':
+            const command = usage.name === 'yarn' ? `yarn ${usage.params.command || ''}` : `yarn ${usage.name.slice(4).toLowerCase()}`;
+            results[resultKey] = await ToolRunner.runCommand(command.trim());
             break;
-          case 'yarnBuild':
-            results[resultKey] = await this.runCommand('yarn build');
-            break;
-          case 'yarnTest':
-            results[resultKey] = await this.runCommand('yarn test');
-            break;
-          case 'removeNodeModules':
-            results[resultKey] = await this.runCommand('rm -rf node_modules');
+          case 'yarnadd':
+            results[resultKey] = await ToolRunner.runCommand(`yarn add ${usage.params.package}`);
             break;
           default:
             Logger.log(`Unrecognized tool: ${usage.name}`);
@@ -74,7 +92,7 @@ export class ToolRunner {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         Logger.error(`Error executing ${usage.name}: ${errorMessage}`);
-        results[`${usage.name}|${Object.entries(usage.params).map(([key, value]) => `${key}=${value}`).join(',')}`] = `failed: ${errorMessage}`;
+        results[`${usage.name}|${Object.entries(usage.params || {}).map(([key, value]) => `${key}=${value}`).join(',')}`] = `failed: ${errorMessage}`;
       }
     }
 
@@ -82,22 +100,22 @@ export class ToolRunner {
     if (!fs.existsSync(path.join(this.projectRoot, 'node_modules'))) {
       try {
         Logger.log('Installing dependencies...');
-        //await this.runCommand('yarn install');
+        results['yarnInstall'] = await ToolRunner.runCommand('yarn install');
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         Logger.error(`Failed to install dependencies: ${errorMessage}`);
+        results['yarnInstall'] = `failed: ${errorMessage}`;
       }
     }
 
     // Run standard tools
-    //const standardTools = ['tsc', 'jest', 'eslint .', 'npm audit'];
-    const standardTools = ['tsc'];
+    const standardTools = ['tsc', 'jest', 'eslint .', 'npm audit'];
     for (const tool of standardTools) {
       try {
-        results[tool] = await this.runCommand(`yarn ${tool}`);
+        results[tool] = await ToolRunner.runCommand(`yarn ${tool}`);
       } catch (error) {
-        const { error: errorMessage, stderr } = error as { error: string; stderr: string };
-        results[tool] = `failed: ${errorMessage}\nstderr: ${stderr}`;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        results[tool] = `failed: ${errorMessage}`;
       }
     }
 
