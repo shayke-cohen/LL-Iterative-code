@@ -102,8 +102,8 @@ module.exports = {
 async function main() {
   const cli = new CLIInterface();
   
-  // Ask for the project directory
-  const defaultProjectRoot = process.cwd();
+  // Ask for the project directory with /tmp as the default
+  const defaultProjectRoot = '/tmp';
   const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
   const projectRoot = projectRootInput.trim() || defaultProjectRoot;
 
@@ -123,6 +123,11 @@ async function main() {
 
   // Clear the history before beginning
   historyManager.clearHistory();
+
+  // Ask for the task description
+  const defaultTask = "add more logs, improve code and fix issues and bugs";
+  const taskDescription = await cli.askQuestion(`Enter the task description (default: "${defaultTask}"): `);
+  const finalTaskDescription = taskDescription.trim() || defaultTask;
 
   const task: Task = TaskInitializer.initialize(
     'add a todo list react app with typescript and jest',
