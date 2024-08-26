@@ -90,10 +90,11 @@ export class ToolRunner {
     }
 
     // Run standard tools
-    const standardTools = ['tsc', 'jest', 'eslint .', 'npm audit'];
+    //const standardTools = ['tsc', 'jest', 'eslint .', 'npm audit'];
+    const standardTools = ['tsc'];
     for (const tool of standardTools) {
       try {
-        //results[tool] = await this.runCommand(`yarn ${tool}`);
+        results[tool] = await this.runCommand(`yarn ${tool}`);
       } catch (error) {
         const { error: errorMessage, stderr } = error as { error: string; stderr: string };
         results[tool] = `failed: ${errorMessage}\nstderr: ${stderr}`;
