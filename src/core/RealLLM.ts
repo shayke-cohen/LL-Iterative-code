@@ -12,22 +12,21 @@ export class RealLLM extends LLMInterface {
   async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateCodePrompt(task, toolResults);
-      Logger.log("Generating code prompt:\n" + prompt);
-
+      
       try {
         const response = await runPrompt({
           prompt,
-          taskDescription: 'Code Generation',
+          taskDescription: task.currentTaskDescription || task.description,
           useCache: true, 
           model: 'gpt-4o' 
         });
-
+  
         if (!response) {
           throw new Error('No response received from LLM');
         }
-
+  
         Logger.log("Received generate response from LLM:\n " + response);
-
+  
         try {
           const cleanedResponse = this.cleanJsonString(response);
           let parsedResponse = this.parseResponse(cleanedResponse);
@@ -64,17 +63,25 @@ export class RealLLM extends LLMInterface {
   
         Logger.log("Received analyze response from LLM:\n " + response);
   
+        // Extract JSON part from the response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No valid JSON found in the response');
+        }
+        const jsonString = jsonMatch[0];
+  
         // Parse the JSON response
-        const parsedResponse = JSON.parse(response);
+        const parsedResponse = JSON.parse(jsonString);
   
         // Convert the parsed response to LLMResponse format
         const llmResponse: LLMResponse = {
-          toolUsages: parsedResponse.toolUsages || [],
+          toolUsages: [], // Always empty for analysis step
           questions: [], // Always empty for analysis step
           isTaskComplete: parsedResponse.isTaskComplete || false,
           completionReason: parsedResponse.completionReason,
           actionsSummary: parsedResponse.actionsSummary || '',
-          relevantFiles: parsedResponse.relevantFiles || []
+          relevantFiles: parsedResponse.relevantFiles || [],
+          newTaskDefinition: parsedResponse.newTaskDefinition || ''
         };
   
         return llmResponse;
@@ -89,7 +96,8 @@ export class RealLLM extends LLMInterface {
     let prompt = `
   You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
   
-  Task Description: ${task.description}
+  Original Task Description: ${task.description}
+  Current Task Description: ${task.currentTaskDescription || task.description}
   
   Relevant Files:
   ${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
@@ -107,7 +115,6 @@ export class RealLLM extends LLMInterface {
   }).join('\n\n')}
   `;
   
-    // Add accumulated questions and answers only if there are any
     if (this.additionalClarifications.length > 0) {
       prompt += `
   Accumulated Questions and Answers:
@@ -116,7 +123,9 @@ export class RealLLM extends LLMInterface {
     }
   
     prompt += `
-  Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
+  ${this.generateToolInstructions()}
+  
+  Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
   
   {
     "updatedFiles": [
@@ -144,10 +153,11 @@ export class RealLLM extends LLMInterface {
   }
   
   Important Instructions:
-  1. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
-  2. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
-  3. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
-  4. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+  1. Focus on addressing the current task description while keeping the original task in mind.
+  2. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+  3. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+  4. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
+  5. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
   
   Ensure that your response is a valid JSON string.
   `;
@@ -157,9 +167,10 @@ export class RealLLM extends LLMInterface {
 
   protected generateAnalysisPrompt(task: Task, toolResults: ToolResults): string {
     let prompt = `
-  You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs. Here's the relevant information:
+  You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs, and then construct a new task definition for the next iteration. Here's the relevant information:
   
-  Task Description: ${task.description}
+  Original Task Description: ${task.description}
+  Current Task Description: ${task.currentTaskDescription || task.description}
   
   Current Working Files:
   ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
@@ -173,39 +184,30 @@ export class RealLLM extends LLMInterface {
     }
   }).join('\n\n')}
   
-  Based on this information, please provide a comprehensive analysis of the current state of the project. Your analysis should include:
+  Based on this information, please provide a comprehensive analysis of the current state of the project and construct a new task definition for the next iteration. Your analysis should include:
   
   1. A summary of the current state of the project
   2. Any issues or errors identified from the tool results
   3. Suggestions for next steps or improvements
-  4. An assessment of whether the task is complete or what remains to be done
-  5. A list of relevant files that need attention based on the tool results, including:
-     - Failed test files
-     - Files with TypeScript compiler errors
-     - Files mentioned in stack traces
-     - Any other files that appear significant based on the tool results
+  4. An assessment of whether the overall task is complete or what remains to be done
+  5. A list of relevant files that need attention based on the tool results
+  6. A new task definition for the next iteration, following this format:
+     "After trying to [last task], now you need to [new task], keep in mind that the original task was [original task]"
   
   Your response should be a valid JSON object with the following structure:
-  
-  {
-    "actionsSummary": "A brief summary of the analysis and suggested actions",
-    "isTaskComplete": boolean,
-    "completionReason": "Reason for task completion, if applicable",
-    "toolUsages": [
-      {
-        "name": "tool name",
-        "params": {},
-        "reasoning": "Reason for suggesting this tool"
-      }
-    ],
-    "relevantFiles": [
-      "List of relevant file names"
-    ]
-  }
-  
-  Do not include a "questions" field in your response. Focus on providing a thorough analysis based on the current information without asking for additional clarification.
-  
-  Ensure that your response is a valid JSON string that can be parsed.
+
+{
+  "actionsSummary": "A brief summary of the analysis and suggested actions",
+  "isTaskComplete": boolean,
+  "completionReason": "Reason for task completion, if applicable",
+  "relevantFiles": [
+    "List of relevant file names"
+  ],
+  "newTaskDefinition": "The new task definition as described above"
+}
+
+IMPORTANT: Your response must be a valid JSON object only, without any additional text before or after. Do not include any explanations or text outside of the JSON structure.
+
   `;
   
     return prompt;

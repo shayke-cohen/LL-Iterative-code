@@ -5,6 +5,7 @@ interface File {
   
   interface Task {
     description: string;
+    currentTaskDescription?: string;
     relevantFiles: File[];
     workingFiles: File[];
     projectRootDirectory: string;

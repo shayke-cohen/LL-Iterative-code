@@ -139,7 +139,9 @@ async function main() {
 
   try {
     let isTaskComplete = false;
-    const llm = new RealLLM();
+    let toolResults: ToolResults = {}; // Initialize toolResults
+    let currentTaskDescription = finalTaskDescription; // Initialize with the original task
+
     while (iterationController.shouldContinue(isTaskComplete)) {
       iterationController.incrementIteration();
       Logger.log(`Starting iteration ${iterationController.getCurrentIteration()}`);
@@ -148,33 +150,22 @@ async function main() {
       task.relevantFiles = await readFilesFromDisk(task.relevantFiles.map(file => file.fileName), projectRoot);
       task.workingFiles = await readFilesFromDisk(task.workingFiles.map(file => file.fileName), projectRoot);
 
+      // Update the task with the current task description
+      task.currentTaskDescription = currentTaskDescription;
+
       // Code Generation Phase
-      const codeGeneration = await llm.generateCode(task, {});
+      const codeGeneration = await llm.generateCode(task, toolResults);
 
       // Run tools including LLM-suggested actions
-      const { results: toolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
-
-      // Analysis Phase
-      const analysis = await llm.analyzeResults(task, toolResults);
-
-      // Update relevant and working files
-      const allRelevantFiles = new Set([
-        ...task.relevantFiles.map(file => file.fileName),
-        ...task.workingFiles.map(file => file.fileName),
-        ...modifiedFiles,
-        ...newFiles.map(file => file.fileName),
-        ...analysis.relevantFiles
-      ]);
-
-      const updatedFiles = await readFilesFromDisk(Array.from(allRelevantFiles), projectRoot);
+      const { results: newToolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
       
-      task.relevantFiles = updatedFiles;
-      task.workingFiles = updatedFiles;
+      // Update toolResults for the next iteration
+      toolResults = newToolResults;
 
       // Handle questions if any
-      if (analysis.questions && analysis.questions.length > 0) {
+      if (codeGeneration.questions && codeGeneration.questions.length > 0) {
         const clarifications: { question: string; answer: string }[] = [];
-        for (const question of analysis.questions) {
+        for (const question of codeGeneration.questions) {
           const answer = await cli.askQuestion(question);
           clarifications.push({ question, answer });
         }
@@ -183,14 +174,39 @@ async function main() {
         // Update history with action summary, including that questions were asked and answered
         historyManager.addEntry(
           iterationController.getCurrentIteration(), 
-          `${analysis.actionsSummary} Questions were asked and answered.`
+          `${codeGeneration.actionsSummary} Questions were asked and answered.`
         );
 
-        continue; // Restart the iteration after getting answers
+        //continue; // Restart the iteration after getting answers
       }
 
-      // Clear additional clarifications for the next iteration
-      llm.setAdditionalClarifications([]);
+      // Update relevant and working files
+      const allRelevantFiles = new Set([
+        ...task.relevantFiles.map(file => file.fileName),
+        ...task.workingFiles.map(file => file.fileName),
+        ...modifiedFiles,
+        ...newFiles.map(file => file.fileName)
+      ]);
+
+      const updatedFiles = await readFilesFromDisk(Array.from(allRelevantFiles), projectRoot);
+      
+      task.relevantFiles = updatedFiles;
+      task.workingFiles = updatedFiles;
+
+      // Analysis Phase
+      const analysis = await llm.analyzeResults(task, toolResults);
+
+      // Update the current task description for the next iteration
+      if (analysis.newTaskDefinition) {
+        currentTaskDescription = analysis.newTaskDefinition;
+        Logger.log(`New task definition: ${currentTaskDescription}`);
+      }
+
+      // Update relevant files based on analysis
+      if (analysis.relevantFiles && analysis.relevantFiles.length > 0) {
+        const analysisRelevantFiles = await readFilesFromDisk(analysis.relevantFiles, projectRoot);
+        task.relevantFiles = [...task.relevantFiles, ...analysisRelevantFiles];
+      }
 
       // Update history with action summary
       historyManager.addEntry(iterationController.getCurrentIteration(), analysis.actionsSummary);
@@ -201,28 +217,6 @@ async function main() {
         isTaskComplete = true;
         break;
       }
-
-      // Run any additional tools suggested in the analysis phase
-      if (analysis.toolUsages.length > 0) {
-        const { results: additionalResults, newFiles: additionalNewFiles, modifiedFiles: additionalModifiedFiles } = await ToolRunner.runTools(task.workingFiles, analysis.toolUsages);
-        Object.assign(toolResults, additionalResults);
-
-        // Update relevant and working files again if necessary
-        const additionalRelevantFiles = new Set([
-          ...additionalModifiedFiles,
-          ...additionalNewFiles.map(file => file.fileName)
-        ]);
-
-        if (additionalRelevantFiles.size > 0) {
-          const updatedAdditionalFiles = await readFilesFromDisk(Array.from(additionalRelevantFiles), projectRoot);
-          
-          task.relevantFiles.push(...updatedAdditionalFiles);
-          task.workingFiles.push(...updatedAdditionalFiles);
-        }
-      }
-
-      // Update history with analysis summary
-      historyManager.addEntry(iterationController.getCurrentIteration(), analysis.actionsSummary);
     }
 
     if (!isTaskComplete && iterationController.getCurrentIteration() >= 10) {

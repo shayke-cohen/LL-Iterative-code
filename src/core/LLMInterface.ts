@@ -29,6 +29,7 @@ export interface LLMResponse {
   completionReason?: string;
   actionsSummary: string;
   relevantFiles: string[];
+  newTaskDefinition?: string;
 }
 
 export abstract class LLMInterface {
@@ -61,7 +62,11 @@ Available Tools and How to Use Them in Your Response:
    - Request Additional Files:
      name: "requestFiles"
      params: { "filePattern": "glob pattern to match files" }
-     Example: { "filePattern": "src/**/*.ts" } to request all TypeScript files in the src directory and its subdirectories
+     IMPORTANT: Be specific with file patterns to avoid requesting too many files. Use precise patterns or specific file names.
+     Good examples:
+       { "filePattern": "src/components/Button.ts" }
+       { "filePattern": "src/utils/string*.ts" }
+     Avoid overly broad patterns like "**/*.ts" which may return too many files.
 
 3. Yarn Operations:
    - Install Dependencies:
@@ -85,28 +90,29 @@ Available Tools and How to Use Them in Your Response:
      name: "completeTask"
      params: {}
 
+Guidelines for Tool Usage:
+1. Use specific file patterns when requesting files. Avoid patterns that might return a large number of files.
+2. Only request files that are directly relevant to the current task or error messages.
+3. Prefer updating or creating individual files over requesting many files at once.
+4. If you need to make changes across multiple files, consider requesting them one at a time or in small, related groups.
+
 For each tool usage, provide the tool name, parameters, and reasoning. For example:
 
 "toolUsages": [
   {
     "name": "requestFiles",
     "params": {
-      "filePattern": "src/**/*.ts"
+      "filePattern": "src/components/Button.ts"
     },
-    "reasoning": "Need to examine all TypeScript files in the src directory to understand the project structure"
+    "reasoning": "Need to examine the Button component to understand its current implementation"
   },
   {
     "name": "updateFile",
     "params": {
-      "fileName": "src/index.ts",
-      "content": "// Updated TypeScript code here"
+      "fileName": "src/components/Button.ts",
+      "content": "// Updated Button component code"
     },
-    "reasoning": "Updated the main entry point to fix a bug and improve performance"
-  },
-  {
-    "name": "yarnInstall",
-    "params": {},
-    "reasoning": "Installing dependencies after updating package.json"
+    "reasoning": "Updating the Button component to fix a styling issue"
   }
 ]
 
