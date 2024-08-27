@@ -1,8 +1,20 @@
 import { Task, File } from './TaskInitializer';
 
+
+export interface ToolResult {
+  success: boolean;
+  message: string;
+}
+
+export interface ToolResults {
+  [key: string]: ToolResult;
+}
+
+/*
 export interface ToolResults {
   [key: string]: string | { stdout: string; stderr: string; error?: string };
 }
+*/
 
 export interface ToolUsage {
   name: string;
@@ -16,6 +28,7 @@ export interface LLMResponse {
   isTaskComplete: boolean;
   completionReason?: string;
   actionsSummary: string;
+  relevantFiles: string[];
 }
 
 export abstract class LLMInterface {

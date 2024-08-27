@@ -8,6 +8,7 @@ export class RealLLM extends LLMInterface {
   private lastAnalysisRecommendations: string = '';
   private additionalClarifications: { question: string; answer: string }[] = [];
 
+
   async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateCodePrompt(task, toolResults);
@@ -48,7 +49,7 @@ export class RealLLM extends LLMInterface {
   async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateAnalysisPrompt(task, toolResults);
-      
+  
       try {
         const response = await runPrompt({
           prompt,
@@ -56,45 +57,27 @@ export class RealLLM extends LLMInterface {
           useCache: true, 
           model: 'gpt-4o' 
         });
-
+  
         if (!response) {
           throw new Error('No response received from LLM');
         }
-
+  
         Logger.log("Received analyze response from LLM:\n " + response);
-
-        // Store the analysis recommendations for the next generate prompt
-        this.lastAnalysisRecommendations = response;
-
-        // Parse the text response into the required LLMResponse format
-        const parsedResponse: LLMResponse = {
-          toolUsages: [],
-          questions: [],
-          isTaskComplete: false,
-          completionReason: undefined,
-          actionsSummary: response
+  
+        // Parse the JSON response
+        const parsedResponse = JSON.parse(response);
+  
+        // Convert the parsed response to LLMResponse format
+        const llmResponse: LLMResponse = {
+          toolUsages: parsedResponse.toolUsages || [],
+          questions: [], // Always empty for analysis step
+          isTaskComplete: parsedResponse.isTaskComplete || false,
+          completionReason: parsedResponse.completionReason,
+          actionsSummary: parsedResponse.actionsSummary || '',
+          relevantFiles: parsedResponse.relevantFiles || []
         };
-
-        // Check if the response indicates the task is complete
-        if (response.toLowerCase().includes("task is complete") || response.toLowerCase().includes("task has been completed")) {
-          parsedResponse.isTaskComplete = true;
-          parsedResponse.completionReason = "Analysis indicates task completion";
-        }
-
-        // Extract any tool usages mentioned in the response
-        const toolMatches = response.match(/run\s+(['"])?(\w+)(['"])?\s+command/gi);
-        if (toolMatches) {
-          parsedResponse.toolUsages = toolMatches.map(match => {
-            const tool = match.replace(/run\s+(['"])?(\w+)(['"])?\s+command/i, '$2').toLowerCase();
-            return {
-              name: tool,
-              params: {},
-              reasoning: `Suggested by analysis to run ${tool}`
-            };
-          });
-        }
-
-        return parsedResponse;
+  
+        return llmResponse;
       } catch (error) {
         Logger.error("Error in result analysis: " + error);
         throw error;
@@ -104,143 +87,133 @@ export class RealLLM extends LLMInterface {
 
   protected generateCodePrompt(task: Task, toolResults: ToolResults): string {
     let prompt = `
-You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
-
-Task Description: ${task.description}
-
-Relevant Files:
-${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
-
-Working Files:
-${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
-`;
-
-    if (Object.keys(toolResults).length > 0) {
-      prompt += `
-Previous Tool Results:
-${Object.entries(toolResults).map(([tool, result]) => {
-  if (typeof result === 'object' && result !== null && 'stdout' in result) {
-    return `${tool}:\nstdout: ${result.stdout}\nstderr: ${result.stderr}\nerror: ${result.error || 'None'}`;
-  } else {
-    return `${tool}:\n${result}`;
-  }
-}).join('\n\n')}
-`;
+  You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
+  
+  Task Description: ${task.description}
+  
+  Relevant Files:
+  ${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+  
+  Working Files:
+  ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+  
+  Previous Tool Results:
+  ${Object.entries(toolResults).map(([tool, result]) => {
+    if (typeof result === 'object' && result !== null && 'success' in result) {
+      return `${tool}: ${result.success ? 'Success' : 'Failure'}\nMessage: ${result.message}`;
+    } else {
+      return `${tool}: ${result}`;
     }
-
-    if (this.lastAnalysisRecommendations) {
-      prompt += `
-Analysis Recommendations:
-${this.lastAnalysisRecommendations}
-`;
-    }
-
+  }).join('\n\n')}
+  `;
+  
+    // Add accumulated questions and answers only if there are any
     if (this.additionalClarifications.length > 0) {
       prompt += `
-Additional Clarifications:
-${this.additionalClarifications.map(({ question, answer }) => `Q: ${question}\nA: ${answer}`).join('\n\n')}
-`;
+  Accumulated Questions and Answers:
+  ${this.additionalClarifications.map(qa => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n\n')}
+  `;
     }
-
+  
     prompt += `
-Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
-
-{
-  "toolUsages": [
-    {
-      "name": "toolName",
-      "params": {
-        "param1": "value1",
-        "param2": "value2"
-      },
-      "reasoning": "Explanation for using this tool"
-    }
-  ],
-  "questions": [
-    "Any questions for the user, if applicable"
-  ],
-  "isTaskComplete": false,
-  "completionReason": "If isTaskComplete is true, provide a reason here",
-  "actionsSummary": "A brief summary of the actions taken in this iteration"
-}
-
-Important Instructions:
-1. To update or create files, use the "updateFile" tool with the following structure:
-   {
-     "name": "updateFile",
-     "params": {
-       "fileName": "path/to/file",
-       "content": "New or updated file content"
-     },
-     "reasoning": "Explanation for updating this file"
-   }
-2. To add a new package, use the "yarn add" tool with the following structure:
-   {
-     "name": "yarnAdd",
-     "params": {
-       "package": "package-name"
-     },
-     "reasoning": "Explanation for adding this package"
-   }
-3. If you have any questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
-4. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
-5. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
-6. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
-
-Ensure that your response is a valid JSON string.
-`;
-
+  Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
+  
+  {
+    "updatedFiles": [
+      {
+        "fileName": "example.ts",
+        "contentSnippet": "// Updated TypeScript code here"
+      }
+    ],
+    "toolUsages": [
+      {
+        "name": "toolName",
+        "params": {
+          "param1": "value1",
+          "param2": "value2"
+        },
+        "reasoning": "Explanation for using this tool"
+      }
+    ],
+    "questions": [
+      "Any new questions for the user, if applicable"
+    ],
+    "isTaskComplete": false,
+    "completionReason": "If isTaskComplete is true, provide a reason here",
+    "actionsSummary": "A brief summary of the actions taken in this iteration"
+  }
+  
+  Important Instructions:
+  1. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+  2. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+  3. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
+  4. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+  
+  Ensure that your response is a valid JSON string.
+  `;
+  
     return prompt;
   }
 
   protected generateAnalysisPrompt(task: Task, toolResults: ToolResults): string {
     let prompt = `
-You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs. Here's the relevant information:
-
-Task Description: ${task.description}
-
-Current Working Files:
-${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
-`;
-
-    if (Object.keys(toolResults).length > 0) {
-      prompt += `
-Tool Results:
-${Object.entries(toolResults).map(([tool, result]) => {
-  if (typeof result === 'object' && result !== null && 'stdout' in result) {
-    return `${tool}:\nstdout: ${result.stdout}\nstderr: ${result.stderr}\nerror: ${result.error || 'None'}`;
-  } else {
-    return `${tool}:\n${result}`;
-  }
-}).join('\n\n')}
-`;
+  You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs. Here's the relevant information:
+  
+  Task Description: ${task.description}
+  
+  Current Working Files:
+  ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+  
+  Tool Results:
+  ${Object.entries(toolResults).map(([tool, result]) => {
+    if (typeof result === 'object' && result !== null && 'success' in result) {
+      return `${tool}: ${result.success ? 'Success' : 'Failure'}\nMessage: ${result.message}`;
+    } else {
+      return `${tool}: ${result}`;
     }
-
-    prompt += `
-Based on this information, please provide a comprehensive analysis of the current state of the project. Your analysis should include:
-
-1. A summary of the current state of the project
-2. Any issues or errors identified from the tool results
-3. Suggestions for next steps or improvements
-4. An assessment of whether the task is complete or what remains to be done
-
-If you need to suggest running additional tools or making changes, you can mention them in your analysis. Available tools include:
-- yarn add [package-name]: To add a new package
-- yarn install: To install dependencies
-- yarn build: To build the project
-- yarn test: To run tests
-- tsc: To run the TypeScript compiler
-- eslint: To run the linter
-
-Your response should be a detailed text analysis. Do not format your response as JSON or include any specific JSON fields.
-`;
-
+  }).join('\n\n')}
+  
+  Based on this information, please provide a comprehensive analysis of the current state of the project. Your analysis should include:
+  
+  1. A summary of the current state of the project
+  2. Any issues or errors identified from the tool results
+  3. Suggestions for next steps or improvements
+  4. An assessment of whether the task is complete or what remains to be done
+  5. A list of relevant files that need attention based on the tool results, including:
+     - Failed test files
+     - Files with TypeScript compiler errors
+     - Files mentioned in stack traces
+     - Any other files that appear significant based on the tool results
+  
+  Your response should be a valid JSON object with the following structure:
+  
+  {
+    "actionsSummary": "A brief summary of the analysis and suggested actions",
+    "isTaskComplete": boolean,
+    "completionReason": "Reason for task completion, if applicable",
+    "toolUsages": [
+      {
+        "name": "tool name",
+        "params": {},
+        "reasoning": "Reason for suggesting this tool"
+      }
+    ],
+    "relevantFiles": [
+      "List of relevant file names"
+    ]
+  }
+  
+  Do not include a "questions" field in your response. Focus on providing a thorough analysis based on the current information without asking for additional clarification.
+  
+  Ensure that your response is a valid JSON string that can be parsed.
+  `;
+  
     return prompt;
   }
 
   // Add a method to set additional clarifications
   setAdditionalClarifications(clarifications: { question: string; answer: string }[]): void {
-    this.additionalClarifications = clarifications;
+    this.additionalClarifications.push(...clarifications);
   }
 
   private cleanJsonString(jsonString: string): string {
@@ -263,5 +236,53 @@ Your response should be a detailed text analysis. Do not format your response as
         }
       });
     });
+  }
+
+  private extractRelevantFiles(toolResults: ToolResults): string[] {
+    const relevantFiles = new Set<string>();
+  
+    for (const [tool, result] of Object.entries(toolResults)) {
+      if (typeof result === 'object' && result !== null && 'message' in result) {
+        const message = result.message;
+        
+        // Extract file paths from TypeScript compiler errors
+        const tsErrors = message.match(/(?:^|\n)(.+\.ts)\(\d+,\d+\):/g);
+        if (tsErrors) {
+          tsErrors.forEach(error => {
+            const match = error.match(/(.+\.ts)/);
+            if (match) relevantFiles.add(match[1]);
+          });
+        }
+  
+        // Extract file paths from Jest test results
+        const jestErrors = message.match(/(?:^|\n)\s*●\s(.+\.test\.ts):/g);
+        if (jestErrors) {
+          jestErrors.forEach(error => {
+            const match = error.match(/(.+\.test\.ts)/);
+            if (match) relevantFiles.add(match[1]);
+          });
+        }
+  
+        // Extract file paths from ESLint results
+        const eslintErrors = message.match(/(?:^|\n)(.+\.ts):/g);
+        if (eslintErrors) {
+          eslintErrors.forEach(error => {
+            const match = error.match(/(.+\.ts)/);
+            if (match) relevantFiles.add(match[1]);
+          });
+        }
+  
+        // Extract file paths from stack traces
+        const stackTraces = message.match(/(?:^|\n)\s+at\s.+\((.+\.ts):\d+:\d+\)/g);
+        if (stackTraces) {
+          stackTraces.forEach(trace => {
+            const match = trace.match(/\((.+\.ts):\d+:\d+\)/);
+            if (match) relevantFiles.add(match[1]);
+          });
+        }
+      }
+    }
+  
+    return Array.from(relevantFiles);
   }
 }

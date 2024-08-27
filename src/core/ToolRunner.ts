@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { File } from './TaskInitializer';
-import { ToolResults, ToolUsage } from './LLMInterface';
+import { ToolResults, ToolResult, ToolUsage } from './LLMInterface';
 import { FileManager } from './FileManager';
 import { Logger } from './Logger';
 import glob from 'glob';
@@ -16,9 +16,7 @@ export class ToolRunner {
     this.projectRoot = projectRoot;
   }
 
-  static async runCommand(command: string): Promise<{ stdout: string; stderr: string; error?: string }> {
-    // log the command to be executed
-    Logger.log(`Executing command: ${command}`);
+  static async runCommand(command: string): Promise<ToolResult> {
     return new Promise((resolve) => {
       exec(command, { cwd: this.projectRoot }, (error, stdout, stderr) => {
         if (error) {
@@ -26,27 +24,30 @@ export class ToolRunner {
           Logger.error(`Error: ${error.message}`);
           Logger.error(`stderr: ${stderr}`);
           Logger.error(`stdout: ${stdout}`);
-          resolve({ stdout, stderr, error: error.message });
+          resolve({
+            success: false,
+            message: `Execution failed. Error: ${error.message}\nstderr: ${stderr}\nstdout: ${stdout}`
+          });
         } else {
           Logger.log(`Command executed successfully: ${command}`);
-          Logger.log(`stdout: ${stdout}`);
-          if (stderr) {
-            Logger.log(`stderr: ${stderr}`);
-          }
-          resolve({ stdout, stderr });
+          resolve({
+            success: true,
+            message: "Execution successful."
+          });
         }
       });
     });
   }
 
-  static async runTools(workingFiles: File[], toolUsages: ToolUsage[]): Promise<{ results: ToolResults; newFiles: File[] }> {
+  static async runTools(workingFiles: File[], toolUsages: ToolUsage[]): Promise<{ results: ToolResults; newFiles: File[]; modifiedFiles: string[] }> {
     const results: ToolResults = {};
     let newFiles: File[] = [];
+    let modifiedFiles: string[] = [];
 
     // Check if toolUsages is undefined or empty
     if (!toolUsages || toolUsages.length === 0) {
       Logger.log('No tool usages specified. Skipping tool execution.');
-      return { results, newFiles };
+      return { results, newFiles, modifiedFiles };
     }
 
     // Execute specific tool usages
@@ -61,18 +62,37 @@ export class ToolRunner {
         
         switch (usage.name.toLowerCase()) {
           case 'movefile':
-            results[resultKey] = this.fileManager.moveFile(usage.params.source, usage.params.destination) ? 'success' : 'failed';
+            results[resultKey] = {
+              success: this.fileManager.moveFile(usage.params.source, usage.params.destination),
+              message: this.fileManager.moveFile(usage.params.source, usage.params.destination) ? "File moved successfully." : "Failed to move file."
+            };
+            if (results[resultKey].success) {
+              modifiedFiles.push(usage.params.destination);
+            }
             break;
           case 'deletefile':
-            results[resultKey] = this.fileManager.deleteFile(usage.params.fileName) ? 'success' : 'failed';
+            results[resultKey] = {
+              success: this.fileManager.deleteFile(usage.params.fileName),
+              message: this.fileManager.deleteFile(usage.params.fileName) ? "File deleted successfully." : "Failed to delete file."
+            };
             break;
           case 'updatefile':
-            results[resultKey] = this.fileManager.updateFile({fileName: usage.params.fileName, contentSnippet: usage.params.content}) ? 'success' : 'failed';
+            results[resultKey] = {
+              success: this.fileManager.updateFile({fileName: usage.params.fileName, contentSnippet: usage.params.content}),
+              message: this.fileManager.updateFile({fileName: usage.params.fileName, contentSnippet: usage.params.content}) ? "File updated successfully." : "Failed to update file."
+            };
+            if (results[resultKey].success) {
+              modifiedFiles.push(usage.params.fileName);
+            }
             break;
           case 'requestfiles':
             const files = await this.requestFiles(usage.params.filePattern);
             newFiles = [...newFiles, ...files];
-            results[resultKey] = `Found ${files.length} files matching pattern ${usage.params.filePattern}`;
+            results[resultKey] = {
+              success: true,
+              message: `Found ${files.length} files matching pattern ${usage.params.filePattern}`
+            };
+            modifiedFiles.push(...files.map(file => file.fileName));
             break;
           case 'yarn':
           case 'yarninstall':
@@ -91,8 +111,10 @@ export class ToolRunner {
         Logger.log(`Executed ${usage.name} with reasoning: ${usage.reasoning}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        Logger.error(`Error executing ${usage.name}: ${errorMessage}`);
-        results[`${usage.name}|${Object.entries(usage.params || {}).map(([key, value]) => `${key}=${value}`).join(',')}`] = `failed: ${errorMessage}`;
+        results[`${usage.name}|${Object.entries(usage.params || {}).map(([key, value]) => `${key}=${value}`).join(',')}`] = {
+          success: false,
+          message: `Failed: ${errorMessage}`
+        };
       }
     }
 
@@ -104,7 +126,10 @@ export class ToolRunner {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         Logger.error(`Failed to install dependencies: ${errorMessage}`);
-        results['yarnInstall'] = `failed: ${errorMessage}`;
+        results['yarnInstall'] = {
+          success: false,
+          message: `Failed to install dependencies: ${errorMessage}`
+        };
       }
     }
 
@@ -115,11 +140,14 @@ export class ToolRunner {
         results[tool] = await ToolRunner.runCommand(`yarn ${tool}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        results[tool] = `failed: ${errorMessage}`;
+        results[tool] = {
+          success: false,
+          message: `Failed: ${errorMessage}`
+        };
       }
     }
 
-    return { results, newFiles };
+    return { results, newFiles, modifiedFiles };
   }
 
   private static async requestFiles(filePattern: string): Promise<File[]> {
@@ -136,5 +164,18 @@ export class ToolRunner {
         }
       });
     });
+  }
+
+  static async getUpdatedFiles(projectRoot: string, fileNames: string[]): Promise<File[]> {
+    return Promise.all(fileNames.map(async (fileName) => {
+      const filePath = path.join(projectRoot, fileName);
+      try {
+        const content = await fs.promises.readFile(filePath, 'utf-8');
+        return { fileName, contentSnippet: content };
+      } catch (error) {
+        Logger.error(`Failed to read file ${fileName}: ${error}`);
+        return { fileName, contentSnippet: '' };
+      }
+    }));
   }
 }

@@ -101,7 +101,7 @@ module.exports = {
 
 async function main() {
   const cli = new CLIInterface();
-  
+
   // Ask for the project directory with /tmp as the default
   const defaultProjectRoot = '/Users/shayco/GitHub/temp';
   const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
@@ -130,7 +130,7 @@ async function main() {
   const finalTaskDescription = taskDescription.trim() || defaultTask;
 
   const task: Task = TaskInitializer.initialize(
-    'add a todo list react app with typescript and jest',
+    finalTaskDescription,
     [{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
     [{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
     projectRoot,
@@ -152,28 +152,40 @@ async function main() {
       const codeGeneration = await llm.generateCode(task, {});
 
       // Run tools including LLM-suggested actions
-      const { results: toolResults, newFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
+      const { results: toolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
+
+      // Analysis Phase
+      const analysis = await llm.analyzeResults(task, toolResults);
 
       // Update relevant and working files
-      const updatedFiles = await updateFileList(task.relevantFiles, newFiles, projectRoot);
+      const allRelevantFiles = new Set([
+        ...task.relevantFiles.map(file => file.fileName),
+        ...task.workingFiles.map(file => file.fileName),
+        ...modifiedFiles,
+        ...newFiles.map(file => file.fileName),
+        ...analysis.relevantFiles
+      ]);
+
+      const updatedFiles = await readFilesFromDisk(Array.from(allRelevantFiles), projectRoot);
+      
       task.relevantFiles = updatedFiles;
       task.workingFiles = updatedFiles;
 
       // Handle questions if any
-      if (codeGeneration.questions && codeGeneration.questions.length > 0) {
+      if (analysis.questions && analysis.questions.length > 0) {
         const clarifications: { question: string; answer: string }[] = [];
-        for (const question of codeGeneration.questions) {
+        for (const question of analysis.questions) {
           const answer = await cli.askQuestion(question);
           clarifications.push({ question, answer });
         }
         llm.setAdditionalClarifications(clarifications);
-        
+
         // Update history with action summary, including that questions were asked and answered
         historyManager.addEntry(
           iterationController.getCurrentIteration(), 
-          `${codeGeneration.actionsSummary} Questions were asked and answered.`
+          `${analysis.actionsSummary} Questions were asked and answered.`
         );
-        
+
         continue; // Restart the iteration after getting answers
       }
 
@@ -181,10 +193,7 @@ async function main() {
       llm.setAdditionalClarifications([]);
 
       // Update history with action summary
-      historyManager.addEntry(iterationController.getCurrentIteration(), codeGeneration.actionsSummary);
-
-      // Analysis Phase (always run)
-      const analysis = await llm.analyzeResults(task, toolResults);
+      historyManager.addEntry(iterationController.getCurrentIteration(), analysis.actionsSummary);
 
       // Check if task is complete after analysis
       if (analysis.isTaskComplete) {
@@ -195,13 +204,21 @@ async function main() {
 
       // Run any additional tools suggested in the analysis phase
       if (analysis.toolUsages.length > 0) {
-        const { results: additionalResults, newFiles: additionalFiles } = await ToolRunner.runTools(task.workingFiles, analysis.toolUsages);
+        const { results: additionalResults, newFiles: additionalNewFiles, modifiedFiles: additionalModifiedFiles } = await ToolRunner.runTools(task.workingFiles, analysis.toolUsages);
         Object.assign(toolResults, additionalResults);
-        
+
         // Update relevant and working files again if necessary
-        const updatedFilesAfterAnalysis = await updateFileList(task.relevantFiles, additionalFiles, projectRoot);
-        task.relevantFiles = updatedFilesAfterAnalysis;
-        task.workingFiles = updatedFilesAfterAnalysis;
+        const additionalRelevantFiles = new Set([
+          ...additionalModifiedFiles,
+          ...additionalNewFiles.map(file => file.fileName)
+        ]);
+
+        if (additionalRelevantFiles.size > 0) {
+          const updatedAdditionalFiles = await readFilesFromDisk(Array.from(additionalRelevantFiles), projectRoot);
+          
+          task.relevantFiles.push(...updatedAdditionalFiles);
+          task.workingFiles.push(...updatedAdditionalFiles);
+        }
       }
 
       // Update history with analysis summary
@@ -223,15 +240,14 @@ async function main() {
 async function readFilesFromDisk(fileNames: string[], projectRoot: string): Promise<File[]> {
   return Promise.all(fileNames.map(async (fileName) => {
     const filePath = path.join(projectRoot, fileName);
-    const content = await fs.promises.readFile(filePath, 'utf-8');
-    return { fileName, contentSnippet: content };
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      return { fileName, contentSnippet: content };
+    } catch (error) {
+      Logger.error(`Failed to read file ${fileName}: ${error}`);
+      return { fileName, contentSnippet: '' };
+    }
   }));
-}
-
-// Helper function to update file list
-async function updateFileList(existingFiles: File[], newFiles: File[], projectRoot: string): Promise<File[]> {
-  const updatedFileNames = new Set([...existingFiles, ...newFiles].map(file => file.fileName));
-  return readFilesFromDisk(Array.from(updatedFileNames), projectRoot);
 }
 
 main();
