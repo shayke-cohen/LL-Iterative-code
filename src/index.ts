@@ -103,7 +103,7 @@ async function main() {
   const cli = new CLIInterface();
   
   // Ask for the project directory with /tmp as the default
-  const defaultProjectRoot = '/tmp';
+  const defaultProjectRoot = '/Users/shayco/GitHub/temp';
   const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
   const projectRoot = projectRootInput.trim() || defaultProjectRoot;
 
