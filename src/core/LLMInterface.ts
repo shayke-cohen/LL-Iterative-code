@@ -141,12 +141,6 @@ ${history.join('\n')}
 Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
 
 {
-  "updatedFiles": [
-    {
-      "fileName": "example.ts",
-      "contentSnippet": "// Updated TypeScript code here"
-    }
-  ],
   "toolUsages": [
     {
       "name": "toolName",
@@ -191,12 +185,6 @@ ${history.join('\n')}
 Based on this information, please analyze the results and provide feedback. Your response should be a JSON object with the following structure:
 
 {
-  "updatedFiles": [
-    {
-      "fileName": "example.ts",
-      "contentSnippet": "// Updated TypeScript code here, if any changes are needed"
-    }
-  ],
   "toolUsages": [],
   "questions": [],
   "isTaskComplete": false,

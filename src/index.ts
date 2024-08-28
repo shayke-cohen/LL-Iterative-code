@@ -112,7 +112,7 @@ async function main() {
 
   console.log(`Using project directory: ${absoluteProjectRoot}`);
 
-  await ensureProjectSetup(absoluteProjectRoot);
+  //await ensureProjectSetup(absoluteProjectRoot);
 
   Logger.initialize(projectRoot);
   ToolRunner.initialize(projectRoot);
@@ -125,22 +125,23 @@ async function main() {
   historyManager.clearHistory();
 
   // Ask for the task description
-  const defaultTask = "add more logs, improve code and fix issues and bugs";
+  //const defaultTask = "add more logs, improve code and fix issues and bugs";
+  const defaultTask = "create a node project in typscript that expose a function that calculate average of array of numbers. add jest test test. make sure you setup all project relevant files.";
   const taskDescription = await cli.askQuestion(`Enter the task description (default: "${defaultTask}"): `);
   const finalTaskDescription = taskDescription.trim() || defaultTask;
 
   const task: Task = TaskInitializer.initialize(
     finalTaskDescription,
-    [{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
-    [{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
+    [], //[{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
+    [],//[{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
     projectRoot,
     true
   );
 
   try {
     let isTaskComplete = false;
-    let toolResults: ToolResults = {}; // Initialize toolResults
-    let currentTaskDescription = finalTaskDescription; // Initialize with the original task
+    let toolResults: ToolResults = {};
+    let currentTaskDescription = finalTaskDescription;
 
     while (iterationController.shouldContinue(isTaskComplete)) {
       iterationController.incrementIteration();
@@ -158,7 +159,7 @@ async function main() {
 
       // Run tools including LLM-suggested actions
       const { results: newToolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
-      
+
       // Update toolResults for the next iteration
       toolResults = newToolResults;
 
@@ -176,8 +177,6 @@ async function main() {
           iterationController.getCurrentIteration(), 
           `${codeGeneration.actionsSummary} Questions were asked and answered.`
         );
-
-        //continue; // Restart the iteration after getting answers
       }
 
       // Update relevant and working files
@@ -189,22 +188,38 @@ async function main() {
       ]);
 
       const updatedFiles = await readFilesFromDisk(Array.from(allRelevantFiles), projectRoot);
-      
+
       task.relevantFiles = updatedFiles;
       task.workingFiles = updatedFiles;
 
       // Analysis Phase
       const analysis = await llm.analyzeResults(task, toolResults);
 
+      // Check for missing files
+      let missingFiles: string[] = [];
+      if (analysis.relevantFiles && analysis.relevantFiles.length > 0) {
+        missingFiles = analysis.relevantFiles.filter(file => {
+          const filePath = path.join(projectRoot, file);
+          return !fs.existsSync(filePath);
+        });
+      }
+
       // Update the current task description for the next iteration
       if (analysis.newTaskDefinition) {
         currentTaskDescription = analysis.newTaskDefinition;
+        if (missingFiles.length > 0) {
+          currentTaskDescription += ` Additionally, the following files were requested but do not exist: ${missingFiles.join(', ')}. Consider creating these files if they are necessary for the project.`;
+        }
         Logger.log(`New task definition: ${currentTaskDescription}`);
       }
 
-      // Update relevant files based on analysis
+      // Update relevant files based on analysis (only existing files)
       if (analysis.relevantFiles && analysis.relevantFiles.length > 0) {
-        const analysisRelevantFiles = await readFilesFromDisk(analysis.relevantFiles, projectRoot);
+        const existingRelevantFiles = analysis.relevantFiles.filter(file => {
+          const filePath = path.join(projectRoot, file);
+          return fs.existsSync(filePath);
+        });
+        const analysisRelevantFiles = await readFilesFromDisk(existingRelevantFiles, projectRoot);
         task.relevantFiles = [...task.relevantFiles, ...analysisRelevantFiles];
       }
 

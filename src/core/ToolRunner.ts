@@ -135,7 +135,7 @@ export class ToolRunner {
 
     // Run standard tools
     //const standardTools = ['tsc', 'jest', 'eslint .', 'npm audit'];
-    const standardTools = ['tsc', 'jest', 'eslint .'];
+    const standardTools = ['tsc', 'jest'];
     for (const tool of standardTools) {
       try {
         results[tool] = await ToolRunner.runCommand(`yarn ${tool}`);

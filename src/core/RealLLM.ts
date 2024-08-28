@@ -12,6 +12,9 @@ export class RealLLM extends LLMInterface {
   async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateCodePrompt(task, toolResults);
+
+      // log prompt
+      Logger.log("Prompt for code generation: " + prompt);
       
       try {
         const response = await runPrompt({
@@ -49,6 +52,9 @@ export class RealLLM extends LLMInterface {
     return this.retryOperation(async () => {
       const prompt = this.generateAnalysisPrompt(task, toolResults);
   
+      // log prompt
+      Logger.log("Prompt for result analysis: " + prompt);
+
       try {
         const response = await runPrompt({
           prompt,
@@ -128,12 +134,6 @@ export class RealLLM extends LLMInterface {
   Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
   
   {
-    "updatedFiles": [
-      {
-        "fileName": "example.ts",
-        "contentSnippet": "// Updated TypeScript code here"
-      }
-    ],
     "toolUsages": [
       {
         "name": "toolName",
