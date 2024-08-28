@@ -12,5 +12,5 @@
       "flow": true,
       "iterationProgress": true
     },
-    "logLevel": "debug"
+    "logLevel": "info"
   }
