@@ -1,6 +1,7 @@
 import readline from 'readline';
+import { logger } from '../core/initLogger';
 
-class CLIInterface {
+export class CLIInterface {
   private rl: readline.Interface;
 
   constructor() {
@@ -12,7 +13,9 @@ class CLIInterface {
 
   async askQuestion(question: string): Promise<string> {
     return new Promise((resolve) => {
+      logger.logMainFlow(`CLI asking: ${question}`);
       this.rl.question(`${question} `, (answer) => {
+        logger.logMainFlow(`CLI received answer: ${answer}`);
         resolve(answer);
       });
     });
@@ -22,5 +25,3 @@ class CLIInterface {
     this.rl.close();
   }
 }
-
-export { CLIInterface };

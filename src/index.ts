@@ -98,18 +98,15 @@ async function main() {
       // Code Generation Phase
       const codeGeneration = await llm.generateCode(task, toolResults);
 
-      // Run tools including LLM-suggested actions
-      const { results: newToolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
-
-      // Update toolResults for the next iteration
-      toolResults = newToolResults;
-
       // Handle questions if any
       if (codeGeneration.questions && codeGeneration.questions.length > 0) {
+        logger.logMainFlow("LLM has questions. Presenting them to the user.");
         const clarifications: { question: string; answer: string }[] = [];
         for (const question of codeGeneration.questions) {
+          logger.logMainFlow(`Asking user: ${question}`);
           const answer = await cli.askQuestion(question);
           clarifications.push({ question, answer });
+          logger.logMainFlow(`User answered: ${answer}`);
         }
         llm.setAdditionalClarifications(clarifications);
 
@@ -118,7 +115,15 @@ async function main() {
           iterationController.getCurrentIteration(), 
           `${codeGeneration.actionsSummary} Questions were asked and answered.`
         );
+      } else {
+        logger.logMainFlow("No questions from LLM in this iteration.");
       }
+
+      // Run tools including LLM-suggested actions
+      const { results: newToolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
+
+      // Update toolResults for the next iteration
+      toolResults = newToolResults;
 
       // Update relevant and working files
       const allRelevantFileNames = new Set([

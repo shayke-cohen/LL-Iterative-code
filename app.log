@@ -20281,3 +20281,1917 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 2024-08-28T16:21:23.615Z [Main Flow] Relevant files for LLM analysis request: src/utils/mortgageCalculator.ts
 2024-08-28T16:21:29.612Z [Main Flow] New task definition: After trying to fix TypeScript errors related to error handling in src/utils/mortgageCalculator.ts and adding more comprehensive error checks, now you need to consider adding unit tests to verify the correct functionality of the mortgage calculator functions, keep in mind that the original task was add more logs to calculate mortgage
 2024-08-28T16:21:29.614Z [Main Flow] Task completed successfully after analysis. Reason: The original task of adding more logs to calculate mortgage has been fulfilled, and additional error handling has been implemented.
+2024-08-28T16:26:11.832Z [Main Flow] Using project directory: /Users/shayco/GitHub/temp3
+2024-08-28T16:27:26.500Z [Main Flow] Iteration 1 all files found: false
+2024-08-28T16:27:26.502Z [Main Flow] Iteration 1 reasoning:
+src/App.js (Score: 10): This is likely the main component of the React application, where the todo list functionality will be implemented. It's crucial for the task.
+
+src/components/TodoList.js (Score: 9): This component would likely contain the logic for rendering the list of todos and managing their state. It's highly relevant to the task.
+
+src/components/TodoItem.js (Score: 8): This component would represent individual todo items, handling their display and interactions. It's important for the functionality of the todo list.
+
+src/index.js (Score: 7): This is the entry point of the React application, responsible for rendering the main App component. It's necessary for the project setup.
+
+public/index.html (Score: 6): This is the main HTML file that serves as the entry point for the React application. It's important for the project structure.
+
+package.json (Score: 5): This file contains the project dependencies and scripts. It's necessary for setting up and running the project.
+
+src/styles/App.css (Score: 4): This file would contain the styles for the application, including the todo list components. It's relevant for the visual presentation of the todo list.
+2024-08-28T16:27:26.503Z [Main Flow] Iteration 1 relevant files:
+[
+  {
+    "name": "src/App.js",
+    "score": 10
+  },
+  {
+    "name": "src/components/TodoList.js",
+    "score": 9
+  },
+  {
+    "name": "src/components/TodoItem.js",
+    "score": 8
+  },
+  {
+    "name": "src/index.js",
+    "score": 7
+  },
+  {
+    "name": "public/index.html",
+    "score": 6
+  },
+  {
+    "name": "package.json",
+    "score": 5
+  },
+  {
+    "name": "src/styles/App.css",
+    "score": 4
+  }
+]
+2024-08-28T16:27:26.508Z [Main Flow] Potential new file suggested by LLM: src/App.js (Score: 10)
+2024-08-28T16:27:26.509Z [Main Flow] Potential new file suggested by LLM: src/components/TodoList.js (Score: 9)
+2024-08-28T16:27:26.510Z [Main Flow] Potential new file suggested by LLM: src/components/TodoItem.js (Score: 8)
+2024-08-28T16:27:26.512Z [Main Flow] Potential new file suggested by LLM: src/index.js (Score: 7)
+2024-08-28T16:27:26.513Z [Main Flow] Potential new file suggested by LLM: public/index.html (Score: 6)
+2024-08-28T16:27:26.513Z [Main Flow] Potential new file suggested by LLM: package.json (Score: 5)
+2024-08-28T16:27:26.514Z [Main Flow] Potential new file suggested by LLM: src/styles/App.css (Score: 4)
+2024-08-28T16:27:37.544Z [Main Flow] Iteration 2 all files found: true
+2024-08-28T16:27:37.544Z [Main Flow] Iteration 2 reasoning:
+src/App.js (Score: 10): This is the main component file for the React application. It will likely contain the state management for the todo list and the overall structure of the app.
+
+src/components/TodoList.js (Score: 9): This component will render the list of todo items and manage the list's functionality.
+
+src/components/TodoItem.js (Score: 9): This component will represent individual todo items, handling their display and interactions.
+
+src/index.js (Score: 8): This is the entry point for the React application, responsible for rendering the App component and setting up any necessary configurations.
+
+public/index.html (Score: 7): This is the main HTML file that serves as the entry point for the React application in the browser.
+
+package.json (Score: 6): This file contains the project's dependencies and scripts, which are essential for setting up and running the React application.
+
+src/styles/App.css (Score: 5): This file will contain the styles for the application, which are important for the visual presentation of the todo list.
+2024-08-28T16:27:37.545Z [Main Flow] Iteration 2 relevant files:
+[
+  {
+    "name": "src/App.js",
+    "score": 10
+  },
+  {
+    "name": "src/components/TodoList.js",
+    "score": 9
+  },
+  {
+    "name": "src/components/TodoItem.js",
+    "score": 9
+  },
+  {
+    "name": "src/index.js",
+    "score": 8
+  },
+  {
+    "name": "public/index.html",
+    "score": 7
+  },
+  {
+    "name": "package.json",
+    "score": 6
+  },
+  {
+    "name": "src/styles/App.css",
+    "score": 5
+  }
+]
+2024-08-28T16:27:37.546Z [Main Flow] LLM indicates all files have been found.
+2024-08-28T16:27:37.546Z [Main Flow] Starting iteration 1
+2024-08-28T16:27:37.549Z [Tool Stderr] Failed to read file src/App.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/App.js'
+2024-08-28T16:27:37.549Z [Tool Stderr] Failed to read file src/components/TodoItem.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoItem.js'
+2024-08-28T16:27:37.550Z [Tool Stderr] Failed to read file src/components/TodoList.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoList.js'
+2024-08-28T16:27:37.551Z [Tool Stderr] Failed to read file src/index.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/index.js'
+2024-08-28T16:27:37.552Z [Tool Stderr] Failed to read file public/index.html: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/public/index.html'
+2024-08-28T16:27:37.552Z [Tool Stderr] Failed to read file package.json: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/package.json'
+2024-08-28T16:27:37.553Z [Tool Stderr] Failed to read file src/styles/App.css: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/styles/App.css'
+2024-08-28T16:27:37.554Z [Tool Stderr] Failed to read file src/App.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/App.js'
+2024-08-28T16:27:37.555Z [Tool Stderr] Failed to read file src/components/TodoList.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoList.js'
+2024-08-28T16:27:37.556Z [Tool Stderr] Failed to read file src/components/TodoItem.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoItem.js'
+2024-08-28T16:27:37.557Z [Tool Stderr] Failed to read file src/index.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/index.js'
+2024-08-28T16:27:37.558Z [Tool Stderr] Failed to read file public/index.html: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/public/index.html'
+2024-08-28T16:27:37.558Z [Tool Stderr] Failed to read file package.json: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/package.json'
+2024-08-28T16:27:37.559Z [Tool Stderr] Failed to read file src/styles/App.css: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/styles/App.css'
+2024-08-28T16:27:37.561Z [Main Flow] Relevant files for LLM request: src/App.js, src/components/TodoList.js, src/components/TodoItem.js, src/index.js, public/index.html, package.json, src/styles/App.css
+2024-08-28T16:28:21.989Z [Main Flow] Updated file src/App.tsx
+2024-08-28T16:28:21.990Z [Main Flow] Updated file src/App.tsx
+2024-08-28T16:28:21.990Z [Main Flow] Executed updateFile with reasoning: Creating the main App component with state management for todos
+2024-08-28T16:28:21.991Z [Main Flow] Updated file src/components/TodoList.tsx
+2024-08-28T16:28:21.992Z [Main Flow] Updated file src/components/TodoList.tsx
+2024-08-28T16:28:21.992Z [Main Flow] Executed updateFile with reasoning: Creating the TodoList component to display and manage todos
+2024-08-28T16:28:21.993Z [Main Flow] Updated file src/components/TodoItem.tsx
+2024-08-28T16:28:21.993Z [Main Flow] Updated file src/components/TodoItem.tsx
+2024-08-28T16:28:21.994Z [Main Flow] Executed updateFile with reasoning: Creating the TodoItem component to render individual todo items
+2024-08-28T16:28:21.995Z [Main Flow] Updated file src/index.tsx
+2024-08-28T16:28:21.995Z [Main Flow] Updated file src/index.tsx
+2024-08-28T16:28:21.996Z [Main Flow] Executed updateFile with reasoning: Setting up the entry point for the React application
+2024-08-28T16:28:21.997Z [Main Flow] Updated file public/index.html
+2024-08-28T16:28:21.998Z [Main Flow] Updated file public/index.html
+2024-08-28T16:28:21.998Z [Main Flow] Executed updateFile with reasoning: Creating the HTML template for the React application
+2024-08-28T16:28:21.999Z [Main Flow] Updated file package.json
+2024-08-28T16:28:22.000Z [Main Flow] Updated file package.json
+2024-08-28T16:28:22.000Z [Main Flow] Executed updateFile with reasoning: Setting up the package.json file with necessary dependencies and scripts
+2024-08-28T16:28:22.001Z [Main Flow] Updated file src/styles/App.css
+2024-08-28T16:28:22.002Z [Main Flow] Updated file src/styles/App.css
+2024-08-28T16:28:22.002Z [Main Flow] Executed updateFile with reasoning: Adding styles for the Todo List application
+2024-08-28T16:29:45.090Z [Tool Execution] Command executed successfully: yarn install
+2024-08-28T16:29:45.091Z [Main Flow] Executed yarnInstall with reasoning: Installing project dependencies
+2024-08-28T16:29:45.742Z [Tool Stderr] Command execution failed: yarn tsc
+2024-08-28T16:29:45.742Z [Tool Stderr] Error: Command failed: yarn tsc
+error Command failed with exit code 1.
+
+2024-08-28T16:29:45.742Z [Tool Stderr] stderr: error Command failed with exit code 1.
+
+2024-08-28T16:29:45.743Z [Tool Stderr] stdout: $ /Users/shayco/GitHub/temp3/node_modules/.bin/tsc
+Version 4.9.5
+tsc: The TypeScript Compiler - Version 4.9.5
+
+COMMON COMMANDS
+
+  tsc
+  Compiles the current project (tsconfig.json in the working directory.)
+
+  tsc app.ts util.ts
+  Ignoring tsconfig.json, compiles the specified files with default compiler options.
+
+  tsc -b
+  Build a composite project in the working directory.
+
+  tsc --init
+  Creates a tsconfig.json with the recommended settings in the working directory.
+
+  tsc -p ./path/to/tsconfig.json
+  Compiles the TypeScript project located at the specified path.
+
+  tsc --help --all
+  An expanded version of this information, showing all possible compiler options
+
+  tsc --noEmit
+  tsc --target esnext
+  Compiles the current project, with additional settings.
+
+COMMAND LINE FLAGS
+
+--help, -h
+Print this message.
+
+--watch, -w
+Watch input files.
+
+--all
+Show all compiler options.
+
+--version, -v
+Print the compiler's version.
+
+--init
+Initializes a TypeScript project and creates a tsconfig.json file.
+
+--project, -p
+Compile the project given the path to its configuration file, or to a folder with a 'tsconfig.json'.
+
+--build, -b
+Build one or more projects and their dependencies, if out of date
+
+--showConfig
+Print the final configuration instead of building.
+
+COMMON COMPILER OPTIONS
+
+--pretty
+Enable color and formatting in TypeScript's output to make compiler errors easier to read.
+type: boolean
+default: true
+
+--target, -t
+Set the JavaScript language version for emitted JavaScript and include compatible library declarations.
+one of: es3, es5, es6/es2015, es2016, es2017, es2018, es2019, es2020, es2021, es2022, esnext
+default: es3
+
+--module, -m
+Specify what module code is generated.
+one of: none, commonjs, amd, umd, system, es6/es2015, es2020, es2022, esnext, node16, nodenext
+default: undefined
+
+--lib
+Specify a set of bundled library declaration files that describe the target runtime environment.
+one or more: es5, es6/es2015, es7/es2016, es2017, es2018, es2019, es2020, es2021, es2022, esnext, dom, dom.iterable, webworker, webworker.importscripts, webworker.iterable, scripthost, es2015.core, es2015.collection, es2015.generator, es2015.iterable, es2015.promise, es2015.proxy, es2015.reflect, es2015.symbol, es2015.symbol.wellknown, es2016.array.include, es2017.object, es2017.sharedmemory, es2017.string, es2017.intl, es2017.typedarrays, es2018.asyncgenerator, es2018.asynciterable/esnext.asynciterable, es2018.intl, es2018.promise, es2018.regexp, es2019.array, es2019.object, es2019.string, es2019.symbol/esnext.symbol, es2019.intl, es2020.bigint/esnext.bigint, es2020.date, es2020.promise, es2020.sharedmemory, es2020.string, es2020.symbol.wellknown, es2020.intl, es2020.number, es2021.promise/esnext.promise, es2021.string, es2021.weakref/esnext.weakref, es2021.intl, es2022.array/esnext.array, es2022.error, es2022.intl, es2022.object, es2022.sharedmemory, es2022.string/esnext.string, esnext.intl
+default: undefined
+
+--allowJs
+Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files.
+type: boolean
+default: false
+
+--checkJs
+Enable error reporting in type-checked JavaScript files.
+type: boolean
+default: false
+
+--jsx
+Specify what JSX code is generated.
+one of: preserve, react, react-native, react-jsx, react-jsxdev
+default: undefined
+
+--declaration, -d
+Generate .d.ts files from TypeScript and JavaScript files in your project.
+type: boolean
+default: `false`, unless `composite` is set
+
+--declarationMap
+Create sourcemaps for d.ts files.
+type: boolean
+default: false
+
+--emitDeclarationOnly
+Only output d.ts files and not JavaScript files.
+type: boolean
+default: false
+
+--sourceMap
+Create source map files for emitted JavaScript files.
+type: boolean
+default: false
+
+--outFile
+Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output.
+
+--outDir
+Specify an output folder for all emitted files.
+
+--removeComments
+Disable emitting comments.
+type: boolean
+default: false
+
+--noEmit
+Disable emitting files from a compilation.
+type: boolean
+default: false
+
+--strict
+Enable all strict type-checking options.
+type: boolean
+default: false
+
+--types
+Specify type package names to be included without being referenced in a source file.
+
+--esModuleInterop
+Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility.
+type: boolean
+default: false
+
+You can learn about all of the compiler options at https://aka.ms/tsc
+
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+
+2024-08-28T16:29:47.345Z [Tool Stderr] Command execution failed: yarn jest
+2024-08-28T16:29:47.346Z [Tool Stderr] Error: Command failed: yarn jest
+error Command failed with exit code 1.
+
+2024-08-28T16:29:47.346Z [Tool Stderr] stderr: error Command failed with exit code 1.
+
+2024-08-28T16:29:47.346Z [Tool Stderr] stdout: $ /Users/shayco/GitHub/temp3/node_modules/.bin/jest
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In /Users/shayco/GitHub/temp3
+  5 files checked.
+  testMatch: **/__tests__/**/*.[jt]s?(x), **/?(*.)+(spec|test).[tj]s?(x) - 0 matches
+  testPathIgnorePatterns: /node_modules/ - 5 matches
+  testRegex:  - 0 matches
+Pattern:  - 0 matches
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+
+2024-08-28T16:29:47.346Z [Tool Stderr] Failed to read file src/App.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/App.js'
+2024-08-28T16:29:47.346Z [Tool Stderr] Failed to read file src/components/TodoList.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoList.js'
+2024-08-28T16:29:47.346Z [Tool Stderr] Failed to read file src/components/TodoItem.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoItem.js'
+2024-08-28T16:29:47.346Z [Tool Stderr] Failed to read file src/index.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/index.js'
+2024-08-28T16:29:47.347Z [Main Flow] Relevant files for LLM analysis request: src/App.js, src/components/TodoList.js, src/components/TodoItem.js, src/index.js, public/index.html, package.json, src/styles/App.css, src/App.tsx, src/components/TodoList.tsx, src/components/TodoItem.tsx, src/index.tsx
+2024-08-28T16:29:55.155Z [Main Flow] New task definition: After trying to create a react web project with all files and project setup for a todo list app with in-memory database, now you need to fix TypeScript compilation errors and add unit tests for the components, keep in mind that the original task was to create a react web project with all files and project setup for a todo list app with in-memory database.
+2024-08-28T16:29:55.157Z [Tool Stderr] Failed to read file tsconfig.json: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/tsconfig.json'
+2024-08-28T16:29:55.162Z [Main Flow] Starting iteration 2
+2024-08-28T16:29:55.164Z [Tool Stderr] Failed to read file src/App.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/App.js'
+2024-08-28T16:29:55.164Z [Tool Stderr] Failed to read file src/components/TodoList.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoList.js'
+2024-08-28T16:29:55.165Z [Tool Stderr] Failed to read file src/components/TodoItem.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoItem.js'
+2024-08-28T16:29:55.165Z [Tool Stderr] Failed to read file src/index.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/index.js'
+2024-08-28T16:29:55.166Z [Tool Stderr] Failed to read file tsconfig.json: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/tsconfig.json'
+2024-08-28T16:29:55.168Z [Tool Stderr] Failed to read file src/App.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/App.js'
+2024-08-28T16:29:55.169Z [Tool Stderr] Failed to read file src/components/TodoItem.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoItem.js'
+2024-08-28T16:29:55.169Z [Tool Stderr] Failed to read file src/index.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/index.js'
+2024-08-28T16:29:55.169Z [Tool Stderr] Failed to read file src/components/TodoList.js: Error: ENOENT: no such file or directory, open '/Users/shayco/GitHub/temp3/src/components/TodoList.js'
+2024-08-28T16:29:55.171Z [Main Flow] Relevant files for LLM request: src/App.js, src/components/TodoList.js, src/components/TodoItem.js, src/index.js, public/index.html, package.json, src/styles/App.css, src/App.tsx, src/components/TodoList.tsx, src/components/TodoItem.tsx, src/index.tsx, tsconfig.json
+2024-08-28T16:30:33.372Z [Main Flow] Updated file tsconfig.json
+2024-08-28T16:30:33.374Z [Main Flow] Updated file tsconfig.json
+2024-08-28T16:30:33.374Z [Main Flow] Executed updateFile with reasoning: Adding a tsconfig.json file to configure TypeScript compilation options
+2024-08-28T16:30:33.376Z [Main Flow] Updated file src/App.test.tsx
+2024-08-28T16:30:33.377Z [Main Flow] Updated file src/App.test.tsx
+2024-08-28T16:30:33.377Z [Main Flow] Executed updateFile with reasoning: Adding a basic unit test for the App component
+2024-08-28T16:30:33.378Z [Main Flow] Updated file src/components/TodoList.test.tsx
+2024-08-28T16:30:33.380Z [Main Flow] Updated file src/components/TodoList.test.tsx
+2024-08-28T16:30:33.380Z [Main Flow] Executed updateFile with reasoning: Adding unit tests for the TodoList component
+2024-08-28T16:30:33.381Z [Main Flow] Updated file src/components/TodoItem.test.tsx
+2024-08-28T16:30:33.382Z [Main Flow] Updated file src/components/TodoItem.test.tsx
+2024-08-28T16:30:33.385Z [Main Flow] Executed updateFile with reasoning: Adding unit tests for the TodoItem component
+2024-08-28T16:30:33.386Z [Main Flow] Updated file package.json
+2024-08-28T16:30:33.388Z [Main Flow] Updated file package.json
+2024-08-28T16:30:33.388Z [Main Flow] Executed updateFile with reasoning: Updating package.json to include necessary testing libraries as devDependencies
+2024-08-28T16:30:49.103Z [Tool Execution] Command executed successfully: yarn install
+2024-08-28T16:30:49.103Z [Main Flow] Executed yarnInstall with reasoning: Installing the newly added testing libraries
+2024-08-28T16:46:51.442Z [Main Flow] Using project directory: /Users/shayco/GitHub/temp3
+2024-08-28T16:47:14.822Z [Main Flow] Iteration 1 all files found: true
+2024-08-28T16:47:14.823Z [Main Flow] Iteration 1 reasoning:
+src/components/TodoItem.test.tsx (Score: 10): This file is directly related to the task of reviewing and making tests pass. It contains tests for the TodoItem component, which is a crucial part of the application.
+
+src/components/TodoList.test.tsx (Score: 10): Similar to TodoItem.test.tsx, this file contains tests for the TodoList component, which is essential for the application's functionality. It's highly relevant to the task of reviewing and making tests pass.
+
+src/App.test.tsx (Score: 9): This file likely contains tests for the main App component. While it may not be as specific as the individual component tests, it's still crucial for ensuring the overall application works correctly.
+
+src/components/TodoItem.tsx (Score: 8): This file contains the implementation of the TodoItem component. While not a test file itself, it's closely related to TodoItem.test.tsx and may need modifications to make the tests pass.
+
+src/components/TodoList.tsx (Score: 8): Similar to TodoItem.tsx, this file contains the implementation of the TodoList component. It's closely related to TodoList.test.tsx and may require changes to make the tests pass.
+
+src/App.tsx (Score: 7): This file contains the main App component. While not directly a test file, changes here might be necessary to make certain tests pass, especially those in App.test.tsx.
+
+src/styles/App.css (Score: 3): This file contains styles for the App component. While it's less likely to be directly involved in making tests pass, there's a small chance that some tests might be affected by styling issues.
+2024-08-28T16:47:14.824Z [Main Flow] Iteration 1 relevant files:
+[
+  {
+    "name": "src/components/TodoItem.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/components/TodoList.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/App.test.tsx",
+    "score": 9
+  },
+  {
+    "name": "src/components/TodoItem.tsx",
+    "score": 8
+  },
+  {
+    "name": "src/components/TodoList.tsx",
+    "score": 8
+  },
+  {
+    "name": "src/App.tsx",
+    "score": 7
+  },
+  {
+    "name": "src/styles/App.css",
+    "score": 3
+  }
+]
+2024-08-28T16:47:14.825Z [Main Flow] LLM indicates all files have been found.
+2024-08-28T16:47:14.825Z [Main Flow] Starting iteration 1
+2024-08-28T16:47:14.826Z [Main Flow] Relevant files for LLM request: 
+2024-08-28T16:47:21.136Z [Main Flow] Executed requestFiles with reasoning: To review and make the tests pass, we need to examine the existing test files.
+2024-08-28T16:47:21.140Z [Main Flow] Executed requestFiles with reasoning: We need to examine the source files that are being tested to understand the implementation and make necessary changes.
+2024-08-28T16:51:13.492Z [Main Flow] Using project directory: /Users/shayco/GitHub/temp3
+2024-08-28T16:51:48.447Z [Main Flow] Iteration 1 all files found: true
+2024-08-28T16:51:48.448Z [Main Flow] Iteration 1 reasoning:
+src/components/TodoItem.test.tsx (Score: 10): This file is directly relevant to the task of reviewing and fixing all tests. It contains tests for the TodoItem component.
+
+src/components/TodoList.test.tsx (Score: 10): This file is also directly relevant to the task as it contains tests for the TodoList component.
+
+src/App.test.tsx (Score: 10): This file is highly relevant as it likely contains tests for the main App component.
+
+src/components/TodoItem.tsx (Score: 8): While not a test file itself, this component file is important to understand the structure and behavior being tested in TodoItem.test.tsx.
+
+src/components/TodoList.tsx (Score: 8): Similar to TodoItem.tsx, this component file is crucial for understanding what is being tested in TodoList.test.tsx.
+
+src/App.tsx (Score: 6): This file may be relevant to understand the overall structure of the application and how components are used, which could impact the tests.
+2024-08-28T16:51:48.449Z [Main Flow] Iteration 1 relevant files:
+[
+  {
+    "name": "src/components/TodoItem.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/components/TodoList.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/App.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/components/TodoItem.tsx",
+    "score": 8
+  },
+  {
+    "name": "src/components/TodoList.tsx",
+    "score": 8
+  },
+  {
+    "name": "src/App.tsx",
+    "score": 6
+  }
+]
+2024-08-28T16:51:48.449Z [Main Flow] LLM indicates all files have been found.
+2024-08-28T16:51:48.450Z [Main Flow] Starting iteration 1
+2024-08-28T16:51:48.451Z [Main Flow] Relevant files for LLM request: 
+2024-08-28T16:51:48.451Z [LLM Request] Generating code prompt:
+
+You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
+
+Original Task Description: review and fix all test
+Current Task Description: review and fix all test
+
+Relevant Files:
+
+
+Working Files:
+
+
+Previous Tool Results:
+
+
+
+Available Tools and How to Use Them in Your Response:
+
+1. Automatic Tools (These run automatically, but you can reference their results):
+   - TypeScript Compiler (tsc): Compiles TypeScript code
+   - Jest: Runs unit tests
+   - ESLint: Lints the code
+   - npm audit: Checks for vulnerabilities in dependencies
+
+2. File Operations:
+   - Move File:
+     name: "moveFile"
+     params: { "source": "path/to/source", "destination": "path/to/destination" }
+
+   - Delete File:
+     name: "deleteFile"
+     params: { "fileName": "path/to/file" }
+
+   - Update File:
+     name: "updateFile"
+     params: { "fileName": "path/to/file", "content": "new file content" }
+
+   - Request Additional Files:
+     name: "requestFiles"
+     params: { "filePattern": "glob pattern to match files" }
+     IMPORTANT: Be specific with file patterns to avoid requesting too many files. Use precise patterns or specific file names.
+     Good examples:
+       { "filePattern": "src/components/Button.ts" }
+       { "filePattern": "src/utils/string*.ts" }
+     Avoid overly broad patterns like "**/*.ts" which may return too many files.
+
+3. Yarn Operations:
+   - Install Dependencies:
+     name: "yarnInstall"
+     params: {}
+
+   - Build Project:
+     name: "yarnBuild"
+     params: {}
+
+   - Run Tests:
+     name: "yarnTest"
+     params: {}
+
+   - Remove node_modules:
+     name: "removeNodeModules"
+     params: {}
+
+4. Task Completion:
+   - To indicate the task is complete:
+     name: "completeTask"
+     params: {}
+
+Guidelines for Tool Usage:
+1. Use specific file patterns when requesting files. Avoid patterns that might return a large number of files.
+2. Only request files that are directly relevant to the current task or error messages.
+3. Prefer updating or creating individual files over requesting many files at once.
+4. If you need to make changes across multiple files, consider requesting them one at a time or in small, related groups.
+
+For each tool usage, provide the tool name, parameters, and reasoning. For example:
+
+"toolUsages": [
+  {
+    "name": "requestFiles",
+    "params": {
+      "filePattern": "src/components/Button.ts"
+    },
+    "reasoning": "Need to examine the Button component to understand its current implementation"
+  },
+  {
+    "name": "updateFile",
+    "params": {
+      "fileName": "src/components/Button.ts",
+      "content": "// Updated Button component code"
+    },
+    "reasoning": "Updating the Button component to fix a styling issue"
+  }
+]
+
+Include these toolUsages in your JSON response along with any updated files and questions.
+
+
+Important Instructions:
+1. Focus on addressing the current task description while keeping the original task in mind.
+2. Do not ask for file contents. If a file is mentioned in the relevant files, its content will be provided automatically.
+3. Do not ask for Jest test results or TypeScript compilation results. These will be provided automatically in the next iteration if you run the respective tools.
+4. If you need to create a new file or update an existing one, use the "updateFile" tool.
+5. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+6. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+7. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
+8. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+
+Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
+
+{
+  "toolUsages": [
+    {
+      "name": "toolName",
+      "params": {
+        "param1": "value1",
+        "param2": "value2"
+      },
+      "reasoning": "Explanation for using this tool"
+    }
+  ],
+  "questions": [
+    "Any new questions for the user, if applicable"
+  ],
+  "isTaskComplete": false,
+  "completionReason": "If isTaskComplete is true, provide a reason here",
+  "actionsSummary": "A brief summary of the actions taken in this iteration"
+}
+
+Ensure that your response is a valid JSON string.
+
+2024-08-28T16:51:54.411Z [LLM Response] Received generate response from LLM:
+ {
+  "toolUsages": [
+    {
+      "name": "requestFiles",
+      "params": {
+        "filePattern": "**/*.test.ts"
+      },
+      "reasoning": "To review and fix all tests, we need to examine all test files in the project."
+    },
+    {
+      "name": "yarnTest",
+      "params": {},
+      "reasoning": "Running the tests will help identify which tests are failing and need to be fixed."
+    }
+  ],
+  "questions": [
+    "1. Are there any specific test failures or issues that were reported in the previous test run?",
+    "2. Are there any known changes in the application code that might have caused test failures?",
+    "3. Are there any particular areas of the codebase that we should focus on for test improvements?"
+  ],
+  "isTaskComplete": false,
+  "actionsSummary": "Requested all test files and initiated a test run to identify failing tests. Awaiting results and additional information to proceed with fixing the tests."
+}
+2024-08-28T16:51:54.902Z [Main Flow] Executed requestFiles with reasoning: To review and fix all tests, we need to examine all test files in the project.
+2024-08-28T16:59:27.766Z [Main Flow] CLI asking: Enter the project directory (default: /Users/shayco/GitHub/temp): 
+2024-08-28T16:59:38.005Z [Main Flow] CLI received answer: /Users/shayco/GitHub/temp3
+2024-08-28T16:59:38.006Z [Main Flow] Using project directory: /Users/shayco/GitHub/temp3
+2024-08-28T16:59:38.006Z [Main Flow] CLI asking: Enter the task description (default: "create a node project in typescript that expose a function that calculate average of array of numbers. add jest test test. make sure you setup all project relevant files."): 
+2024-08-28T16:59:49.237Z [Main Flow] CLI received answer: review fproject and fix tests
+2024-08-28T17:00:03.812Z [Main Flow] Iteration 1 all files found: true
+2024-08-28T17:00:03.813Z [Main Flow] Iteration 1 reasoning:
+src/components/TodoList.test.tsx (Score: 10): This file is directly related to testing the TodoList component, which is likely a core part of the project. It's crucial for reviewing and fixing tests.
+
+src/components/TodoItem.test.tsx (Score: 10): Similar to TodoList.test.tsx, this file is essential for testing the TodoItem component, another key part of the project.
+
+src/App.test.tsx (Score: 9): This file contains tests for the main App component, which is important for overall application testing.
+
+src/components/TodoList.tsx (Score: 8): This is the main implementation of the TodoList component. Understanding this file is crucial for fixing related tests.
+
+src/components/TodoItem.tsx (Score: 8): This file contains the implementation of the TodoItem component, which is important for understanding and fixing related tests.
+
+src/App.tsx (Score: 7): The main App component might integrate TodoList and TodoItem, making it relevant for understanding the overall structure and potential test issues.
+
+src/index.tsx (Score: 5): This file is the entry point of the application and might contain important setup code that could affect tests.
+
+src/styles/App.css (Score: 3): While not directly related to tests, styles might occasionally affect component rendering and thus indirectly impact tests.
+
+public/index.html (Score: 2): This file is less likely to be directly relevant to the tests but might contain important configuration or scripts that could indirectly affect testing.
+2024-08-28T17:00:03.813Z [Main Flow] Iteration 1 relevant files:
+[
+  {
+    "name": "src/components/TodoList.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/components/TodoItem.test.tsx",
+    "score": 10
+  },
+  {
+    "name": "src/App.test.tsx",
+    "score": 9
+  },
+  {
+    "name": "src/components/TodoList.tsx",
+    "score": 8
+  },
+  {
+    "name": "src/components/TodoItem.tsx",
+    "score": 8
+  },
+  {
+    "name": "src/App.tsx",
+    "score": 7
+  },
+  {
+    "name": "src/index.tsx",
+    "score": 5
+  },
+  {
+    "name": "src/styles/App.css",
+    "score": 3
+  },
+  {
+    "name": "public/index.html",
+    "score": 2
+  }
+]
+2024-08-28T17:00:03.813Z [Main Flow] LLM indicates all files have been found.
+2024-08-28T17:00:03.813Z [Main Flow] Starting iteration 1
+2024-08-28T17:00:03.814Z [Main Flow] Relevant files for LLM request: 
+2024-08-28T17:00:03.814Z [LLM Request] Generating code prompt:
+
+You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
+
+Original Task Description: review fproject and fix tests
+Current Task Description: review fproject and fix tests
+
+Relevant Files:
+
+
+Working Files:
+
+
+Previous Tool Results:
+
+
+
+Available Tools and How to Use Them in Your Response:
+
+1. Automatic Tools (These run automatically, but you can reference their results):
+   - TypeScript Compiler (tsc): Compiles TypeScript code
+   - Jest: Runs unit tests
+   - ESLint: Lints the code
+   - npm audit: Checks for vulnerabilities in dependencies
+
+2. File Operations:
+   - Move File:
+     name: "moveFile"
+     params: { "source": "path/to/source", "destination": "path/to/destination" }
+
+   - Delete File:
+     name: "deleteFile"
+     params: { "fileName": "path/to/file" }
+
+   - Update File:
+     name: "updateFile"
+     params: { "fileName": "path/to/file", "content": "new file content" }
+
+   - Request Additional Files:
+     name: "requestFiles"
+     params: { "filePattern": "glob pattern to match files" }
+     IMPORTANT: Be specific with file patterns to avoid requesting too many files. Use precise patterns or specific file names.
+     Good examples:
+       { "filePattern": "src/components/Button.ts" }
+       { "filePattern": "src/utils/string*.ts" }
+     Avoid overly broad patterns like "**/*.ts" which may return too many files.
+
+3. Yarn Operations:
+   - Install Dependencies:
+     name: "yarnInstall"
+     params: {}
+
+   - Build Project:
+     name: "yarnBuild"
+     params: {}
+
+   - Run Tests:
+     name: "yarnTest"
+     params: {}
+
+   - Remove node_modules:
+     name: "removeNodeModules"
+     params: {}
+
+4. Task Completion:
+   - To indicate the task is complete:
+     name: "completeTask"
+     params: {}
+
+Guidelines for Tool Usage:
+1. Use specific file patterns when requesting files. Avoid patterns that might return a large number of files.
+2. Only request files that are directly relevant to the current task or error messages.
+3. Prefer updating or creating individual files over requesting many files at once.
+4. If you need to make changes across multiple files, consider requesting them one at a time or in small, related groups.
+
+For each tool usage, provide the tool name, parameters, and reasoning. For example:
+
+"toolUsages": [
+  {
+    "name": "requestFiles",
+    "params": {
+      "filePattern": "src/components/Button.ts"
+    },
+    "reasoning": "Need to examine the Button component to understand its current implementation"
+  },
+  {
+    "name": "updateFile",
+    "params": {
+      "fileName": "src/components/Button.ts",
+      "content": "// Updated Button component code"
+    },
+    "reasoning": "Updating the Button component to fix a styling issue"
+  }
+]
+
+Include these toolUsages in your JSON response along with any updated files and questions.
+
+
+Important Instructions:
+1. Focus on addressing the current task description while keeping the original task in mind.
+2. Do not ask for file contents. If a file is mentioned in the relevant files, its content will be provided automatically.
+3. Do not ask for Jest test results or TypeScript compilation results. These will be provided automatically in the next iteration if you run the respective tools.
+4. If you need to create a new file or update an existing one, use the "updateFile" tool.
+5. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+6. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+7. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
+8. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+
+Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
+
+{
+  "toolUsages": [
+    {
+      "name": "toolName",
+      "params": {
+        "param1": "value1",
+        "param2": "value2"
+      },
+      "reasoning": "Explanation for using this tool"
+    }
+  ],
+  "questions": [
+    "Any new questions for the user, if applicable"
+  ],
+  "isTaskComplete": false,
+  "completionReason": "If isTaskComplete is true, provide a reason here",
+  "actionsSummary": "A brief summary of the actions taken in this iteration"
+}
+
+Ensure that your response is a valid JSON string.
+
+2024-08-28T17:00:11.133Z [LLM Response] Received generate response from LLM:
+ {
+  "toolUsages": [
+    {
+      "name": "requestFiles",
+      "params": {
+        "filePattern": "package.json"
+      },
+      "reasoning": "Need to examine the project dependencies and scripts to understand the project structure and test setup"
+    },
+    {
+      "name": "requestFiles",
+      "params": {
+        "filePattern": "jest.config.js"
+      },
+      "reasoning": "Need to check the Jest configuration to understand how tests are set up"
+    },
+    {
+      "name": "requestFiles",
+      "params": {
+        "filePattern": "src/**/*.test.ts"
+      },
+      "reasoning": "Request all test files to review and fix them"
+    },
+    {
+      "name": "yarnTest",
+      "params": {},
+      "reasoning": "Run the tests to see which ones are failing and get more information about the errors"
+    }
+  ],
+  "questions": [
+    "1. Are there any specific test files or areas of the project that are known to have issues?",
+    "2. Are there any particular error messages or patterns in the failing tests that have been observed?"
+  ],
+  "isTaskComplete": false,
+  "actionsSummary": "Requested essential project files including package.json and jest.config.js to understand the project structure and test setup. Also requested all test files and initiated a test run to identify failing tests and gather more information about the errors."
+}
+2024-08-28T17:00:11.134Z [Main Flow] LLM has questions. Presenting them to the user.
+2024-08-28T17:00:11.134Z [Main Flow] Asking user: 1. Are there any specific test files or areas of the project that are known to have issues?
+2024-08-28T17:00:11.135Z [Main Flow] CLI asking: 1. Are there any specific test files or areas of the project that are known to have issues?
+2024-08-28T17:00:20.908Z [Main Flow] CLI received answer: 
+2024-08-28T17:00:20.909Z [Main Flow] User answered: 
+2024-08-28T17:00:20.909Z [Main Flow] Asking user: 2. Are there any particular error messages or patterns in the failing tests that have been observed?
+2024-08-28T17:00:20.910Z [Main Flow] CLI asking: 2. Are there any particular error messages or patterns in the failing tests that have been observed?
+2024-08-28T17:00:28.941Z [Main Flow] CLI received answer: 
+2024-08-28T17:00:28.943Z [Main Flow] User answered: 
+2024-08-28T17:00:28.952Z [Main Flow] Executed requestFiles with reasoning: Need to examine the project dependencies and scripts to understand the project structure and test setup
+2024-08-28T17:00:28.953Z [Main Flow] Executed requestFiles with reasoning: Need to check the Jest configuration to understand how tests are set up
+2024-08-28T17:00:28.955Z [Main Flow] Executed requestFiles with reasoning: Request all test files to review and fix them
+2024-08-28T17:02:14.171Z [Main Flow] CLI asking: Enter the project directory (default: /Users/shayco/GitHub/temp): 
+2024-08-28T17:02:14.742Z [Main Flow] CLI received answer: 
+2024-08-28T17:02:14.743Z [Main Flow] Using project directory: /Users/shayco/GitHub/temp
+2024-08-28T17:02:14.744Z [Main Flow] CLI asking: Enter the task description (default: "create a node project in typescript that expose a function that calculate average of array of numbers. add jest test test. make sure you setup all project relevant files."): 
+2024-08-28T17:02:24.213Z [Main Flow] CLI received answer: review and fix tests
+2024-08-28T17:02:41.564Z [Main Flow] Iteration 1 all files found: false
+2024-08-28T17:02:41.564Z [Main Flow] Iteration 1 reasoning:
+src/__tests__/config.test.ts (Score: 9): This file is likely to contain tests for the configuration, which is an important part of the application and may need review.
+
+src/__tests__/index.test.ts (Score: 8): This file probably contains tests for the main entry point of the application, which could be crucial for overall functionality.
+
+src/__tests__/logger.test.ts (Score: 8): Tests for the logger are important to ensure proper logging functionality throughout the application.
+
+src/mortgageCalculator.test.ts (Score: 10): This file directly tests the mortgage calculator functionality, which is a core part of the application and needs thorough review.
+
+src/taxCalculator.test.ts (Score: 10): Similar to the mortgage calculator tests, this file tests another core functionality (tax calculation) and requires careful review.
+
+src/mortgageCalculator.ts (Score: 7): The actual implementation of the mortgage calculator might need to be reviewed alongside its tests to ensure consistency.
+
+src/taxCalculator.ts (Score: 7): The tax calculator implementation might also need review in conjunction with its tests.
+
+jest.config.js (Score: 6): The Jest configuration file may need to be checked to ensure all tests are properly set up and running correctly.
+
+The tools suggested will help find all test files and related classes for the mortgage and tax calculators, which are likely the main focus of the test review and fixing task. The allFilesFound is set to false because we might discover more relevant files after running these tools.
+2024-08-28T17:02:41.565Z [Main Flow] Iteration 1 relevant files:
+[
+  {
+    "name": "src/__tests__/config.test.ts",
+    "score": 9
+  },
+  {
+    "name": "src/__tests__/index.test.ts",
+    "score": 8
+  },
+  {
+    "name": "src/__tests__/logger.test.ts",
+    "score": 8
+  },
+  {
+    "name": "src/mortgageCalculator.test.ts",
+    "score": 10
+  },
+  {
+    "name": "src/taxCalculator.test.ts",
+    "score": 10
+  },
+  {
+    "name": "src/mortgageCalculator.ts",
+    "score": 7
+  },
+  {
+    "name": "src/taxCalculator.ts",
+    "score": 7
+  },
+  {
+    "name": "jest.config.js",
+    "score": 6
+  }
+]
+2024-08-28T17:02:57.447Z [Main Flow] Iteration 2 all files found: true
+2024-08-28T17:02:57.448Z [Main Flow] Iteration 2 reasoning:
+src/mortgageCalculator.test.ts (Score: 10): This file is directly related to the task of reviewing and fixing tests. It contains tests for the mortgage calculator functionality, which is a core part of the application.
+
+src/taxCalculator.test.ts (Score: 9): Another test file that needs to be reviewed and potentially fixed. It tests the tax calculation functionality, which is also important for the application.
+
+src/__tests__/config.test.ts (Score: 8): This file tests the configuration settings of the application. While not directly related to mortgage or tax calculations, it's important for ensuring the overall functionality of the app.
+
+src/__tests__/logger.test.ts (Score: 8): Tests for the logger functionality. Logging is crucial for debugging and monitoring the application, so these tests are important to review.
+
+src/__tests__/index.test.ts (Score: 7): This file contains tests for the main entry point of the application. It's important to review, but it seems to duplicate some tests from mortgageCalculator.test.ts, hence the slightly lower score.
+
+src/mortgageCalculator.ts (Score: 6): The implementation of the mortgage calculator. While not a test file, it's crucial to understand the implementation when reviewing the tests.
+
+src/taxCalculator.ts (Score: 6): The implementation of the tax calculator. Similar to the mortgage calculator, it's important for understanding the tests.
+
+src/performanceWrapper.ts (Score: 5): This file contains a performance measurement wrapper, which might be used in the tests. It's relevant but not as critical as the actual test files.
+
+jest.config.js (Score: 4): The Jest configuration file. While not a test file itself, it defines how the tests are run and might need to be adjusted if any changes to the test setup are required.
+2024-08-28T17:02:57.448Z [Main Flow] Iteration 2 relevant files:
+[
+  {
+    "name": "src/mortgageCalculator.test.ts",
+    "score": 10
+  },
+  {
+    "name": "src/taxCalculator.test.ts",
+    "score": 9
+  },
+  {
+    "name": "src/__tests__/config.test.ts",
+    "score": 8
+  },
+  {
+    "name": "src/__tests__/logger.test.ts",
+    "score": 8
+  },
+  {
+    "name": "src/__tests__/index.test.ts",
+    "score": 7
+  },
+  {
+    "name": "src/mortgageCalculator.ts",
+    "score": 6
+  },
+  {
+    "name": "src/taxCalculator.ts",
+    "score": 6
+  },
+  {
+    "name": "src/performanceWrapper.ts",
+    "score": 5
+  },
+  {
+    "name": "jest.config.js",
+    "score": 4
+  }
+]
+2024-08-28T17:02:57.449Z [Main Flow] LLM indicates all files have been found.
+2024-08-28T17:02:57.449Z [Main Flow] Starting iteration 1
+2024-08-28T17:02:57.452Z [Main Flow] Relevant files for LLM request: src/__tests__/config.test.ts, src/__tests__/index.test.ts, src/__tests__/logger.test.ts, src/mortgageCalculator.ts, src/taxCalculator.ts, jest.config.js, src/mortgageCalculator.test.ts, src/taxCalculator.test.ts, src/performanceWrapper.ts
+2024-08-28T17:02:57.452Z [LLM Request] Generating code prompt:
+
+You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
+
+Original Task Description: review and fix tests
+Current Task Description: review and fix tests
+
+Relevant Files:
+src/__tests__/config.test.ts:
+import { config } from '../config';
+
+describe('config', () => {
+  it('should have enableLogging property', () => {
+    expect(config).toHaveProperty('enableLogging');
+  });
+
+  it('should set enableLogging based on environment variable', () => {
+    const originalEnv = process.env.ENABLE_LOGGING;
+    process.env.ENABLE_LOGGING = 'true';
+    expect(config.enableLogging).toBe(true);
+    process.env.ENABLE_LOGGING = 'false';
+    expect(config.enableLogging).toBe(false);
+    process.env.ENABLE_LOGGING = originalEnv;
+  });
+});
+
+src/__tests__/index.test.ts:
+import { calculateMortgagePayment } from '../mortgageCalculator';
+
+describe('calculateMortgagePayment', () => {
+  it('should calculate the correct monthly payment', () => {
+    expect(calculateMortgagePayment(200000, 3.5, 30)).toBeCloseTo(898.09, 2);
+    expect(calculateMortgagePayment(300000, 4, 15)).toBeCloseTo(2219.06, 2);
+  });
+
+  it('should handle zero interest rate', () => {
+    expect(calculateMortgagePayment(100000, 0, 10)).toBeCloseTo(833.33, 2);
+  });
+
+  it('should throw an error for invalid inputs', () => {
+    expect(() => calculateMortgagePayment(-100000, 3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, -3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, 3.5, -30)).toThrow();
+  });
+});
+
+
+src/__tests__/logger.test.ts:
+import { Logger } from '../logger';
+import { config } from '../config';
+
+describe('Logger', () => {
+  let consoleSpy: jest.SpyInstance;
+  let errorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    errorSpy = jest.spyOn(console, 'error').mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it('should be a singleton', () => {
+    const instance1 = Logger.getInstance();
+    const instance2 = Logger.getInstance();
+    expect(instance1).toBe(instance2);
+  });
+
+  it('should log messages when logging is enabled', () => {
+    config.enableLogging = true;
+    const logger = Logger.getInstance();
+    logger.log('Test message');
+    expect(consoleSpy).toHaveBeenCalledWith('[LOG] Test message');
+  });
+
+  it('should not log messages when logging is disabled', () => {
+    config.enableLogging = false;
+    const logger = Logger.getInstance();
+    logger.log('Test message');
+    expect(consoleSpy).not.toHaveBeenCalled();
+  });
+
+  it('should log errors when logging is enabled', () => {
+    config.enableLogging = true;
+    const logger = Logger.getInstance();
+    logger.error('Test error');
+    expect(errorSpy).toHaveBeenCalledWith('[ERROR] Test error');
+  });
+
+  it('should not log errors when logging is disabled', () => {
+    config.enableLogging = false;
+    const logger = Logger.getInstance();
+    logger.error('Test error');
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+});
+
+src/mortgageCalculator.ts:
+import { Decimal } from 'decimal.js';
+import { measurePerformance } from './performanceWrapper';
+
+export const calculateMortgagePayment = measurePerformance(function calculateMortgagePayment(principal: number, annualInterestRate: number, loanTermInYears: number): number {
+  console.log(`Calculating mortgage payment for principal: ${principal}, annual interest rate: ${annualInterestRate}, loan term: ${loanTermInYears} years`);
+
+  if (principal <= 0 || annualInterestRate < 0 || loanTermInYears <= 0) {
+    console.error('Invalid input: All values must be positive (interest rate can be zero).');
+    throw new Error('Invalid input: All values must be positive (interest rate can be zero).');
+  }
+
+  if (annualInterestRate === 0) {
+    const payment = Number(new Decimal(principal).dividedBy(loanTermInYears * 12).toFixed(2));
+    console.log(`Zero interest rate. Monthly payment: ${payment}`);
+    return payment;
+  }
+
+  const monthlyInterestRate = new Decimal(annualInterestRate).dividedBy(1200);
+  console.log(`Monthly interest rate: ${monthlyInterestRate}`);
+
+  const numberOfPayments = new Decimal(loanTermInYears * 12);
+  console.log(`Number of payments: ${numberOfPayments}`);
+
+  const monthlyPayment = new Decimal(principal)
+    .times(monthlyInterestRate)
+    .times(Decimal.pow(monthlyInterestRate.plus(1), numberOfPayments))
+    .dividedBy(Decimal.pow(monthlyInterestRate.plus(1), numberOfPayments).minus(1));
+
+  const result = Number(monthlyPayment.toFixed(2));
+  console.log(`Calculated monthly payment: ${result}`);
+  return result;
+});
+
+src/taxCalculator.ts:
+export function calculateTax(income: number, taxRate: number = 0.2): number {
+  if (income < 0 || taxRate < 0 || taxRate > 1) {
+    throw new Error('Invalid input: Income must be non-negative, and tax rate must be between 0 and 1');
+  }
+  return income * taxRate;
+}
+
+jest.config.js:
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src'],
+  transform: {
+    '^.+\.tsx?$': 'ts-jest',
+  },
+  testRegex: '(/__tests__/.*|(\.|/)(test|spec))\.tsx?$',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+};
+
+src/mortgageCalculator.test.ts:
+import { calculateMortgagePayment } from './mortgageCalculator';
+
+describe('calculateMortgagePayment', () => {
+  it('should calculate the correct monthly payment', () => {
+    expect(calculateMortgagePayment(200000, 3.5, 30)).toBeCloseTo(898.09, 2);
+    expect(calculateMortgagePayment(300000, 4, 15)).toBeCloseTo(2219.06, 2);
+  });
+
+  it('should handle zero interest rate', () => {
+    expect(calculateMortgagePayment(100000, 0, 10)).toBeCloseTo(833.33, 2);
+  });
+
+  it('should throw an error for invalid inputs', () => {
+    expect(() => calculateMortgagePayment(-100000, 3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, -3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, 3.5, -30)).toThrow();
+  });
+
+  it('handles extremely large principal amount', () => {
+    const principal = 1000000000; // 1 billion
+    const annualInterestRate = 3.5;
+    const loanTermInYears = 30;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(4490446.88, 2);
+  });
+
+  it('handles very high interest rate', () => {
+    const principal = 200000;
+    const annualInterestRate = 25; // 25%
+    const loanTermInYears = 30;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(4169.16, 2);
+  });
+
+  it('handles very long loan term', () => {
+    const principal = 500000;
+    const annualInterestRate = 4;
+    const loanTermInYears = 100;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(1697.97, 2);
+  });
+
+  it('handles combination of large numbers', () => {
+    const principal = 100000000; // 100 million
+    const annualInterestRate = 10;
+    const loanTermInYears = 50;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(839105.54, 2);
+  });
+});
+
+src/taxCalculator.test.ts:
+import { calculateTax } from './taxCalculator';
+
+describe('calculateTax', () => {
+  it('calculates tax correctly for positive income and tax rate', () => {
+    expect(calculateTax(1000, 0.2)).toBe(200);
+    expect(calculateTax(5000, 0.15)).toBe(750);
+  });
+
+  it('returns 0 for 0 income', () => {
+    expect(calculateTax(0, 0.2)).toBe(0);
+  });
+
+  it('returns 0 for 0 tax rate', () => {
+    expect(calculateTax(1000, 0)).toBe(0);
+  });
+
+  it('throws an error for negative income', () => {
+    expect(() => calculateTax(-1000, 0.2)).toThrow('Invalid input');
+  });
+
+  it('throws an error for negative tax rate', () => {
+    expect(() => calculateTax(1000, -0.2)).toThrow('Invalid input');
+  });
+
+  it('throws an error for tax rate over 1', () => {
+    expect(() => calculateTax(1000, 1.01)).toThrow('Invalid input');
+  });
+});
+
+src/performanceWrapper.ts:
+export function measurePerformance<T extends (...args: any[]) => any>(fn: T): T {
+  return function (...args: Parameters<T>): ReturnType<T> {
+    const start = performance.now();
+    const result = fn(...args);
+    const end = performance.now();
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Performance of ${fn.name}: ${end - start} ms`);
+    }
+    return result;
+  } as T;
+}
+
+Working Files:
+src/__tests__/config.test.ts:
+import { config } from '../config';
+
+describe('config', () => {
+  it('should have enableLogging property', () => {
+    expect(config).toHaveProperty('enableLogging');
+  });
+
+  it('should set enableLogging based on environment variable', () => {
+    const originalEnv = process.env.ENABLE_LOGGING;
+    process.env.ENABLE_LOGGING = 'true';
+    expect(config.enableLogging).toBe(true);
+    process.env.ENABLE_LOGGING = 'false';
+    expect(config.enableLogging).toBe(false);
+    process.env.ENABLE_LOGGING = originalEnv;
+  });
+});
+
+src/__tests__/index.test.ts:
+import { calculateMortgagePayment } from '../mortgageCalculator';
+
+describe('calculateMortgagePayment', () => {
+  it('should calculate the correct monthly payment', () => {
+    expect(calculateMortgagePayment(200000, 3.5, 30)).toBeCloseTo(898.09, 2);
+    expect(calculateMortgagePayment(300000, 4, 15)).toBeCloseTo(2219.06, 2);
+  });
+
+  it('should handle zero interest rate', () => {
+    expect(calculateMortgagePayment(100000, 0, 10)).toBeCloseTo(833.33, 2);
+  });
+
+  it('should throw an error for invalid inputs', () => {
+    expect(() => calculateMortgagePayment(-100000, 3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, -3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, 3.5, -30)).toThrow();
+  });
+});
+
+
+src/__tests__/logger.test.ts:
+import { Logger } from '../logger';
+import { config } from '../config';
+
+describe('Logger', () => {
+  let consoleSpy: jest.SpyInstance;
+  let errorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    errorSpy = jest.spyOn(console, 'error').mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it('should be a singleton', () => {
+    const instance1 = Logger.getInstance();
+    const instance2 = Logger.getInstance();
+    expect(instance1).toBe(instance2);
+  });
+
+  it('should log messages when logging is enabled', () => {
+    config.enableLogging = true;
+    const logger = Logger.getInstance();
+    logger.log('Test message');
+    expect(consoleSpy).toHaveBeenCalledWith('[LOG] Test message');
+  });
+
+  it('should not log messages when logging is disabled', () => {
+    config.enableLogging = false;
+    const logger = Logger.getInstance();
+    logger.log('Test message');
+    expect(consoleSpy).not.toHaveBeenCalled();
+  });
+
+  it('should log errors when logging is enabled', () => {
+    config.enableLogging = true;
+    const logger = Logger.getInstance();
+    logger.error('Test error');
+    expect(errorSpy).toHaveBeenCalledWith('[ERROR] Test error');
+  });
+
+  it('should not log errors when logging is disabled', () => {
+    config.enableLogging = false;
+    const logger = Logger.getInstance();
+    logger.error('Test error');
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+});
+
+src/mortgageCalculator.ts:
+import { Decimal } from 'decimal.js';
+import { measurePerformance } from './performanceWrapper';
+
+export const calculateMortgagePayment = measurePerformance(function calculateMortgagePayment(principal: number, annualInterestRate: number, loanTermInYears: number): number {
+  console.log(`Calculating mortgage payment for principal: ${principal}, annual interest rate: ${annualInterestRate}, loan term: ${loanTermInYears} years`);
+
+  if (principal <= 0 || annualInterestRate < 0 || loanTermInYears <= 0) {
+    console.error('Invalid input: All values must be positive (interest rate can be zero).');
+    throw new Error('Invalid input: All values must be positive (interest rate can be zero).');
+  }
+
+  if (annualInterestRate === 0) {
+    const payment = Number(new Decimal(principal).dividedBy(loanTermInYears * 12).toFixed(2));
+    console.log(`Zero interest rate. Monthly payment: ${payment}`);
+    return payment;
+  }
+
+  const monthlyInterestRate = new Decimal(annualInterestRate).dividedBy(1200);
+  console.log(`Monthly interest rate: ${monthlyInterestRate}`);
+
+  const numberOfPayments = new Decimal(loanTermInYears * 12);
+  console.log(`Number of payments: ${numberOfPayments}`);
+
+  const monthlyPayment = new Decimal(principal)
+    .times(monthlyInterestRate)
+    .times(Decimal.pow(monthlyInterestRate.plus(1), numberOfPayments))
+    .dividedBy(Decimal.pow(monthlyInterestRate.plus(1), numberOfPayments).minus(1));
+
+  const result = Number(monthlyPayment.toFixed(2));
+  console.log(`Calculated monthly payment: ${result}`);
+  return result;
+});
+
+src/taxCalculator.ts:
+export function calculateTax(income: number, taxRate: number = 0.2): number {
+  if (income < 0 || taxRate < 0 || taxRate > 1) {
+    throw new Error('Invalid input: Income must be non-negative, and tax rate must be between 0 and 1');
+  }
+  return income * taxRate;
+}
+
+jest.config.js:
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src'],
+  transform: {
+    '^.+\.tsx?$': 'ts-jest',
+  },
+  testRegex: '(/__tests__/.*|(\.|/)(test|spec))\.tsx?$',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+};
+
+src/mortgageCalculator.test.ts:
+import { calculateMortgagePayment } from './mortgageCalculator';
+
+describe('calculateMortgagePayment', () => {
+  it('should calculate the correct monthly payment', () => {
+    expect(calculateMortgagePayment(200000, 3.5, 30)).toBeCloseTo(898.09, 2);
+    expect(calculateMortgagePayment(300000, 4, 15)).toBeCloseTo(2219.06, 2);
+  });
+
+  it('should handle zero interest rate', () => {
+    expect(calculateMortgagePayment(100000, 0, 10)).toBeCloseTo(833.33, 2);
+  });
+
+  it('should throw an error for invalid inputs', () => {
+    expect(() => calculateMortgagePayment(-100000, 3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, -3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, 3.5, -30)).toThrow();
+  });
+
+  it('handles extremely large principal amount', () => {
+    const principal = 1000000000; // 1 billion
+    const annualInterestRate = 3.5;
+    const loanTermInYears = 30;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(4490446.88, 2);
+  });
+
+  it('handles very high interest rate', () => {
+    const principal = 200000;
+    const annualInterestRate = 25; // 25%
+    const loanTermInYears = 30;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(4169.16, 2);
+  });
+
+  it('handles very long loan term', () => {
+    const principal = 500000;
+    const annualInterestRate = 4;
+    const loanTermInYears = 100;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(1697.97, 2);
+  });
+
+  it('handles combination of large numbers', () => {
+    const principal = 100000000; // 100 million
+    const annualInterestRate = 10;
+    const loanTermInYears = 50;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(839105.54, 2);
+  });
+});
+
+src/taxCalculator.test.ts:
+import { calculateTax } from './taxCalculator';
+
+describe('calculateTax', () => {
+  it('calculates tax correctly for positive income and tax rate', () => {
+    expect(calculateTax(1000, 0.2)).toBe(200);
+    expect(calculateTax(5000, 0.15)).toBe(750);
+  });
+
+  it('returns 0 for 0 income', () => {
+    expect(calculateTax(0, 0.2)).toBe(0);
+  });
+
+  it('returns 0 for 0 tax rate', () => {
+    expect(calculateTax(1000, 0)).toBe(0);
+  });
+
+  it('throws an error for negative income', () => {
+    expect(() => calculateTax(-1000, 0.2)).toThrow('Invalid input');
+  });
+
+  it('throws an error for negative tax rate', () => {
+    expect(() => calculateTax(1000, -0.2)).toThrow('Invalid input');
+  });
+
+  it('throws an error for tax rate over 1', () => {
+    expect(() => calculateTax(1000, 1.01)).toThrow('Invalid input');
+  });
+});
+
+src/performanceWrapper.ts:
+export function measurePerformance<T extends (...args: any[]) => any>(fn: T): T {
+  return function (...args: Parameters<T>): ReturnType<T> {
+    const start = performance.now();
+    const result = fn(...args);
+    const end = performance.now();
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Performance of ${fn.name}: ${end - start} ms`);
+    }
+    return result;
+  } as T;
+}
+
+Previous Tool Results:
+
+
+
+Available Tools and How to Use Them in Your Response:
+
+1. Automatic Tools (These run automatically, but you can reference their results):
+   - TypeScript Compiler (tsc): Compiles TypeScript code
+   - Jest: Runs unit tests
+   - ESLint: Lints the code
+   - npm audit: Checks for vulnerabilities in dependencies
+
+2. File Operations:
+   - Move File:
+     name: "moveFile"
+     params: { "source": "path/to/source", "destination": "path/to/destination" }
+
+   - Delete File:
+     name: "deleteFile"
+     params: { "fileName": "path/to/file" }
+
+   - Update File:
+     name: "updateFile"
+     params: { "fileName": "path/to/file", "content": "new file content" }
+
+   - Request Additional Files:
+     name: "requestFiles"
+     params: { "filePattern": "glob pattern to match files" }
+     IMPORTANT: Be specific with file patterns to avoid requesting too many files. Use precise patterns or specific file names.
+     Good examples:
+       { "filePattern": "src/components/Button.ts" }
+       { "filePattern": "src/utils/string*.ts" }
+     Avoid overly broad patterns like "**/*.ts" which may return too many files.
+
+3. Yarn Operations:
+   - Install Dependencies:
+     name: "yarnInstall"
+     params: {}
+
+   - Build Project:
+     name: "yarnBuild"
+     params: {}
+
+   - Run Tests:
+     name: "yarnTest"
+     params: {}
+
+   - Remove node_modules:
+     name: "removeNodeModules"
+     params: {}
+
+4. Task Completion:
+   - To indicate the task is complete:
+     name: "completeTask"
+     params: {}
+
+Guidelines for Tool Usage:
+1. Use specific file patterns when requesting files. Avoid patterns that might return a large number of files.
+2. Only request files that are directly relevant to the current task or error messages.
+3. Prefer updating or creating individual files over requesting many files at once.
+4. If you need to make changes across multiple files, consider requesting them one at a time or in small, related groups.
+
+For each tool usage, provide the tool name, parameters, and reasoning. For example:
+
+"toolUsages": [
+  {
+    "name": "requestFiles",
+    "params": {
+      "filePattern": "src/components/Button.ts"
+    },
+    "reasoning": "Need to examine the Button component to understand its current implementation"
+  },
+  {
+    "name": "updateFile",
+    "params": {
+      "fileName": "src/components/Button.ts",
+      "content": "// Updated Button component code"
+    },
+    "reasoning": "Updating the Button component to fix a styling issue"
+  }
+]
+
+Include these toolUsages in your JSON response along with any updated files and questions.
+
+
+Important Instructions:
+1. Focus on addressing the current task description while keeping the original task in mind.
+2. Do not ask for file contents. If a file is mentioned in the relevant files, its content will be provided automatically.
+3. Do not ask for Jest test results or TypeScript compilation results. These will be provided automatically in the next iteration if you run the respective tools.
+4. If you need to create a new file or update an existing one, use the "updateFile" tool.
+5. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+6. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+7. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
+8. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+
+Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
+
+{
+  "toolUsages": [
+    {
+      "name": "toolName",
+      "params": {
+        "param1": "value1",
+        "param2": "value2"
+      },
+      "reasoning": "Explanation for using this tool"
+    }
+  ],
+  "questions": [
+    "Any new questions for the user, if applicable"
+  ],
+  "isTaskComplete": false,
+  "completionReason": "If isTaskComplete is true, provide a reason here",
+  "actionsSummary": "A brief summary of the actions taken in this iteration"
+}
+
+Ensure that your response is a valid JSON string.
+
+2024-08-28T17:03:01.120Z [LLM Response] Received generate response from LLM:
+ {
+  "toolUsages": [
+    {
+      "name": "yarnTest",
+      "params": {},
+      "reasoning": "Running tests to check if there are any failing tests that need to be fixed."
+    }
+  ],
+  "questions": [],
+  "isTaskComplete": false,
+  "actionsSummary": "Initiated the test suite to identify any failing tests that may need attention."
+}
+2024-08-28T17:03:01.120Z [Main Flow] No questions from LLM in this iteration.
+2024-08-28T17:03:02.816Z [Tool Execution] Command executed successfully: yarn test
+2024-08-28T17:03:02.816Z [Main Flow] Executed yarnTest with reasoning: Running tests to check if there are any failing tests that need to be fixed.
+2024-08-28T17:03:05.162Z [Tool Execution] Command executed successfully: yarn tsc
+2024-08-28T17:03:06.439Z [Tool Execution] Command executed successfully: yarn jest
+2024-08-28T17:03:06.439Z [Main Flow] Relevant files for LLM analysis request: src/__tests__/config.test.ts, src/__tests__/index.test.ts, src/__tests__/logger.test.ts, src/mortgageCalculator.ts, src/taxCalculator.ts, jest.config.js, src/mortgageCalculator.test.ts, src/taxCalculator.test.ts, src/performanceWrapper.ts
+2024-08-28T17:03:06.439Z [LLM Request] Prompt for result analysis: 
+  You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs, and then construct a new task definition for the next iteration. Here's the relevant information:
+  
+  Original Task Description: review and fix tests
+  Current Task Description: review and fix tests
+  
+  Current Working Files:
+  src/__tests__/config.test.ts:
+import { config } from '../config';
+
+describe('config', () => {
+  it('should have enableLogging property', () => {
+    expect(config).toHaveProperty('enableLogging');
+  });
+
+  it('should set enableLogging based on environment variable', () => {
+    const originalEnv = process.env.ENABLE_LOGGING;
+    process.env.ENABLE_LOGGING = 'true';
+    expect(config.enableLogging).toBe(true);
+    process.env.ENABLE_LOGGING = 'false';
+    expect(config.enableLogging).toBe(false);
+    process.env.ENABLE_LOGGING = originalEnv;
+  });
+});
+
+src/__tests__/index.test.ts:
+import { calculateMortgagePayment } from '../mortgageCalculator';
+
+describe('calculateMortgagePayment', () => {
+  it('should calculate the correct monthly payment', () => {
+    expect(calculateMortgagePayment(200000, 3.5, 30)).toBeCloseTo(898.09, 2);
+    expect(calculateMortgagePayment(300000, 4, 15)).toBeCloseTo(2219.06, 2);
+  });
+
+  it('should handle zero interest rate', () => {
+    expect(calculateMortgagePayment(100000, 0, 10)).toBeCloseTo(833.33, 2);
+  });
+
+  it('should throw an error for invalid inputs', () => {
+    expect(() => calculateMortgagePayment(-100000, 3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, -3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, 3.5, -30)).toThrow();
+  });
+});
+
+
+src/__tests__/logger.test.ts:
+import { Logger } from '../logger';
+import { config } from '../config';
+
+describe('Logger', () => {
+  let consoleSpy: jest.SpyInstance;
+  let errorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    errorSpy = jest.spyOn(console, 'error').mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it('should be a singleton', () => {
+    const instance1 = Logger.getInstance();
+    const instance2 = Logger.getInstance();
+    expect(instance1).toBe(instance2);
+  });
+
+  it('should log messages when logging is enabled', () => {
+    config.enableLogging = true;
+    const logger = Logger.getInstance();
+    logger.log('Test message');
+    expect(consoleSpy).toHaveBeenCalledWith('[LOG] Test message');
+  });
+
+  it('should not log messages when logging is disabled', () => {
+    config.enableLogging = false;
+    const logger = Logger.getInstance();
+    logger.log('Test message');
+    expect(consoleSpy).not.toHaveBeenCalled();
+  });
+
+  it('should log errors when logging is enabled', () => {
+    config.enableLogging = true;
+    const logger = Logger.getInstance();
+    logger.error('Test error');
+    expect(errorSpy).toHaveBeenCalledWith('[ERROR] Test error');
+  });
+
+  it('should not log errors when logging is disabled', () => {
+    config.enableLogging = false;
+    const logger = Logger.getInstance();
+    logger.error('Test error');
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+});
+
+src/mortgageCalculator.ts:
+import { Decimal } from 'decimal.js';
+import { measurePerformance } from './performanceWrapper';
+
+export const calculateMortgagePayment = measurePerformance(function calculateMortgagePayment(principal: number, annualInterestRate: number, loanTermInYears: number): number {
+  console.log(`Calculating mortgage payment for principal: ${principal}, annual interest rate: ${annualInterestRate}, loan term: ${loanTermInYears} years`);
+
+  if (principal <= 0 || annualInterestRate < 0 || loanTermInYears <= 0) {
+    console.error('Invalid input: All values must be positive (interest rate can be zero).');
+    throw new Error('Invalid input: All values must be positive (interest rate can be zero).');
+  }
+
+  if (annualInterestRate === 0) {
+    const payment = Number(new Decimal(principal).dividedBy(loanTermInYears * 12).toFixed(2));
+    console.log(`Zero interest rate. Monthly payment: ${payment}`);
+    return payment;
+  }
+
+  const monthlyInterestRate = new Decimal(annualInterestRate).dividedBy(1200);
+  console.log(`Monthly interest rate: ${monthlyInterestRate}`);
+
+  const numberOfPayments = new Decimal(loanTermInYears * 12);
+  console.log(`Number of payments: ${numberOfPayments}`);
+
+  const monthlyPayment = new Decimal(principal)
+    .times(monthlyInterestRate)
+    .times(Decimal.pow(monthlyInterestRate.plus(1), numberOfPayments))
+    .dividedBy(Decimal.pow(monthlyInterestRate.plus(1), numberOfPayments).minus(1));
+
+  const result = Number(monthlyPayment.toFixed(2));
+  console.log(`Calculated monthly payment: ${result}`);
+  return result;
+});
+
+src/taxCalculator.ts:
+export function calculateTax(income: number, taxRate: number = 0.2): number {
+  if (income < 0 || taxRate < 0 || taxRate > 1) {
+    throw new Error('Invalid input: Income must be non-negative, and tax rate must be between 0 and 1');
+  }
+  return income * taxRate;
+}
+
+jest.config.js:
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src'],
+  transform: {
+    '^.+\.tsx?$': 'ts-jest',
+  },
+  testRegex: '(/__tests__/.*|(\.|/)(test|spec))\.tsx?$',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+};
+
+src/mortgageCalculator.test.ts:
+import { calculateMortgagePayment } from './mortgageCalculator';
+
+describe('calculateMortgagePayment', () => {
+  it('should calculate the correct monthly payment', () => {
+    expect(calculateMortgagePayment(200000, 3.5, 30)).toBeCloseTo(898.09, 2);
+    expect(calculateMortgagePayment(300000, 4, 15)).toBeCloseTo(2219.06, 2);
+  });
+
+  it('should handle zero interest rate', () => {
+    expect(calculateMortgagePayment(100000, 0, 10)).toBeCloseTo(833.33, 2);
+  });
+
+  it('should throw an error for invalid inputs', () => {
+    expect(() => calculateMortgagePayment(-100000, 3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, -3.5, 30)).toThrow();
+    expect(() => calculateMortgagePayment(100000, 3.5, -30)).toThrow();
+  });
+
+  it('handles extremely large principal amount', () => {
+    const principal = 1000000000; // 1 billion
+    const annualInterestRate = 3.5;
+    const loanTermInYears = 30;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(4490446.88, 2);
+  });
+
+  it('handles very high interest rate', () => {
+    const principal = 200000;
+    const annualInterestRate = 25; // 25%
+    const loanTermInYears = 30;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(4169.16, 2);
+  });
+
+  it('handles very long loan term', () => {
+    const principal = 500000;
+    const annualInterestRate = 4;
+    const loanTermInYears = 100;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(1697.97, 2);
+  });
+
+  it('handles combination of large numbers', () => {
+    const principal = 100000000; // 100 million
+    const annualInterestRate = 10;
+    const loanTermInYears = 50;
+
+    const monthlyPayment = calculateMortgagePayment(principal, annualInterestRate, loanTermInYears);
+
+    expect(monthlyPayment).toBeCloseTo(839105.54, 2);
+  });
+});
+
+src/taxCalculator.test.ts:
+import { calculateTax } from './taxCalculator';
+
+describe('calculateTax', () => {
+  it('calculates tax correctly for positive income and tax rate', () => {
+    expect(calculateTax(1000, 0.2)).toBe(200);
+    expect(calculateTax(5000, 0.15)).toBe(750);
+  });
+
+  it('returns 0 for 0 income', () => {
+    expect(calculateTax(0, 0.2)).toBe(0);
+  });
+
+  it('returns 0 for 0 tax rate', () => {
+    expect(calculateTax(1000, 0)).toBe(0);
+  });
+
+  it('throws an error for negative income', () => {
+    expect(() => calculateTax(-1000, 0.2)).toThrow('Invalid input');
+  });
+
+  it('throws an error for negative tax rate', () => {
+    expect(() => calculateTax(1000, -0.2)).toThrow('Invalid input');
+  });
+
+  it('throws an error for tax rate over 1', () => {
+    expect(() => calculateTax(1000, 1.01)).toThrow('Invalid input');
+  });
+});
+
+src/performanceWrapper.ts:
+export function measurePerformance<T extends (...args: any[]) => any>(fn: T): T {
+  return function (...args: Parameters<T>): ReturnType<T> {
+    const start = performance.now();
+    const result = fn(...args);
+    const end = performance.now();
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Performance of ${fn.name}: ${end - start} ms`);
+    }
+    return result;
+  } as T;
+}
+  
+  Tool Results:
+  yarnTest|: Success
+Message: Execution successful.
+
+tsc: Success
+Message: Execution successful.
+
+jest: Success
+Message: Execution successful.
+  
+  Based on this information, please provide a comprehensive analysis of the current state of the project and construct a new task definition for the next iteration. Your analysis should include:
+  
+  1. A summary of the current state of the project
+  2. Any issues or errors identified from the tool results
+  3. Suggestions for next steps or improvements
+  4. An assessment of whether the overall task is complete or what remains to be done
+  5. A list of relevant files that need attention based on the tool results
+  6. A new task definition for the next iteration, following this format:
+     "After trying to [last task], now you need to [new task], keep in mind that the original task was [original task]"
+  
+  Your response should be a valid JSON object with the following structure:
+
+{
+  "actionsSummary": "A brief summary of the analysis and suggested actions",
+  "isTaskComplete": boolean,
+  "completionReason": "Reason for task completion, if applicable",
+  "relevantFiles": [
+    "List of relevant file names"
+  ],
+  "newTaskDefinition": "The new task definition as described above"
+}
+
+IMPORTANT: Your response must be a valid JSON object only, without any additional text before or after. Do not include any explanations or text outside of the JSON structure.
+
+  
+2024-08-28T17:03:13.730Z [LLM Response] Received analyze response from LLM:
+ {
+  "actionsSummary": "The project is in good shape with all tests passing and no TypeScript errors. The test coverage is comprehensive, including edge cases and error handling. The next steps should focus on improving code quality, adding more features, or enhancing performance.",
+  "isTaskComplete": true,
+  "completionReason": "All tests are passing, and the codebase appears to be well-structured and error-free.",
+  "relevantFiles": [
+    "src/__tests__/config.test.ts",
+    "src/__tests__/index.test.ts",
+    "src/__tests__/logger.test.ts",
+    "src/mortgageCalculator.ts",
+    "src/taxCalculator.ts",
+    "src/mortgageCalculator.test.ts",
+    "src/taxCalculator.test.ts",
+    "src/performanceWrapper.ts"
+  ],
+  "newTaskDefinition": "After trying to review and fix tests, now you need to implement additional features or optimize existing code, keep in mind that the original task was review and fix tests"
+}
+2024-08-28T17:03:13.731Z [Main Flow] New task definition: After trying to review and fix tests, now you need to implement additional features or optimize existing code, keep in mind that the original task was review and fix tests
+2024-08-28T17:03:13.737Z [Main Flow] Task completed successfully after analysis. Reason: All tests are passing, and the codebase appears to be well-structured and error-free.
