@@ -11,8 +11,8 @@ export class HistoryManager {
   private history: HistoryEntry[] = [];
   private filePath: string;
 
-  constructor(projectRoot: string) {
-    this.filePath = path.join(projectRoot, 'task_history.json');
+  constructor() {
+    this.filePath = path.join(process.cwd(), 'task_history.json');
   }
 
   clearHistory(): void {

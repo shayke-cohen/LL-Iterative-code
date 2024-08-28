@@ -35,7 +35,7 @@ async function main() {
 
   const llm = new RealLLM();
   const iterationController = new IterationController(10);
-  const historyManager = new HistoryManager(absoluteProjectRoot);
+  const historyManager = new HistoryManager();
 
   historyManager.clearHistory();
 

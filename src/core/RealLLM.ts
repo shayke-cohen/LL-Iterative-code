@@ -16,6 +16,11 @@ export class RealLLM extends LLMInterface {
   async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateCodePrompt(task, toolResults);
+      
+      // Log relevant files
+      const relevantFiles = task.relevantFiles.map(file => file.fileName).join(', ');
+      this.logger.logMainFlow(`Relevant files for LLM request: ${relevantFiles}`);
+      
       this.logger.logLLMRequest("Generating code prompt:\n" + prompt);
 
       try {
@@ -52,6 +57,11 @@ export class RealLLM extends LLMInterface {
   async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateAnalysisPrompt(task, toolResults);
+
+      // Log relevant files
+      const relevantFiles = task.relevantFiles.map(file => file.fileName).join(', ');
+      this.logger.logMainFlow(`Relevant files for LLM analysis request: ${relevantFiles}`);
+
       this.logger.logLLMRequest("Prompt for result analysis: " + prompt);
 
       try {

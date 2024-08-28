@@ -12,7 +12,7 @@ export class Logger {
 
   private constructor(config: LogConfig, projectRoot: string) {
     this.config = config;
-    this.logFile = path.join(projectRoot, 'app.log');
+    this.logFile = path.join(process.cwd(), 'app.log');
   }
 
   static initialize(config: LogConfig, projectRoot: string): void {
