@@ -1,6 +1,6 @@
 # LLM Iterative Code Generation
 
-This project implements an iterative code generation system using a Language Model (LLM). It generates, refines, and validates code iteratively by integrating various development tools, including compilers, linters, testing frameworks, static analysis tools, runtime log collectors, and package management tools.
+This project implements an iterative code generation system using a Language Model (LLM). It generates, refines, and validates code iteratively by integrating various development tools, including compilers, linters, testing frameworks, and package management tools.
 
 ## Table of Contents
 
@@ -8,7 +8,7 @@ This project implements an iterative code generation system using a Language Mod
 - [Project Structure](#project-structure)
 - [Usage](#usage)
 - [Components](#components)
-- [Examples](#examples)
+- [Configuration](#configuration)
 - [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
@@ -37,13 +37,18 @@ This project implements an iterative code generation system using a Language Mod
 llm-iterative-code/
 ├── src/
 │   ├── core/
+│   │   ├── initLogger.ts
+│   │   ├── ConfigManager.ts
 │   │   ├── FileManager.ts
 │   │   ├── HistoryManager.ts
 │   │   ├── IterationController.ts
 │   │   ├── LLMInterface.ts
 │   │   ├── Logger.ts
+│   │   ├── RealLLM.ts
 │   │   ├── TaskInitializer.ts
-│   │   └── ToolRunner.ts
+│   │   ├── ToolRunner.ts
+│   │   ├── file-selector.ts
+│   │   └── tools.ts
 │   ├── cli/
 │   │   └── CLIInterface.ts
 │   └── index.ts
@@ -71,106 +76,45 @@ This will run the main function in `src/index.ts`, which initializes the system 
 
 ## Components
 
-### TaskInitializer
+### initLogger
+Initializes the logging system for the entire application.
 
+### ConfigManager
+Manages configuration settings for the application.
+
+### TaskInitializer
 Initializes a task with relevant files, working files, and project settings.
 
 ### IterationController
-
 Manages the iteration process, keeping track of the current iteration and determining when to stop.
 
 ### LLMInterface
-
 Abstract class defining the interface for interacting with the Language Model.
 
-### ToolRunner
+### RealLLM
+Concrete implementation of the LLMInterface for interacting with the actual Language Model.
 
+### ToolRunner
 Executes various development tools and processes their results.
 
 ### FileManager
-
 Handles file operations such as moving, updating, and deleting files.
 
 ### HistoryManager
-
 Manages the history of actions taken during the code generation process.
 
 ### Logger
-
 Provides logging functionality for the entire system.
 
-## Examples
+### file-selector
+Handles the selection of relevant files for a given task.
 
-Here are some examples of how to use the main components of the system:
+### tools
+Contains utility functions for file operations and analysis.
 
-### Initializing a Task
+## Configuration
 
-```typescript
-import { TaskInitializer, Task } from './core/TaskInitializer';
-
-const task: Task = TaskInitializer.initialize(
-  'Implement a simple TypeScript function',
-  [{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
-  [{ fileName: 'example.ts', contentSnippet: '// TODO: Implement function' }],
-  '/path/to/project/root',
-  true
-);
-```
-
-### Using the IterationController
-
-```typescript
-import { IterationController } from './core/IterationController';
-
-const controller = new IterationController(10);
-
-while (controller.shouldContinue(false)) {
-  controller.incrementIteration();
-  console.log(`Current iteration: ${controller.getCurrentIteration()}`);
-  // Perform iteration tasks here
-}
-```
-
-### Implementing LLMInterface
-
-```typescript
-import { LLMInterface, LLMResponse, ToolResults } from './core/LLMInterface';
-import { Task } from './core/TaskInitializer';
-
-class MyLLM extends LLMInterface {
-  async generateCode(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse> {
-    // Implement code generation logic here
-  }
-
-  async analyzeResults(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse> {
-    // Implement result analysis logic here
-  }
-}
-```
-
-### Using ToolRunner
-
-```typescript
-import { ToolRunner } from './core/ToolRunner';
-import { File } from './core/TaskInitializer';
-import { ToolUsage } from './core/LLMInterface';
-
-ToolRunner.initialize('/path/to/project/root');
-
-const workingFiles: File[] = [
-  { fileName: 'example.ts', contentSnippet: 'console.log("Hello, World!");' }
-];
-
-const toolUsages: ToolUsage[] = [
-  {
-    name: 'updateFile',
-    params: { fileName: 'example.ts', content: 'console.log("Updated!");' },
-    reasoning: 'Update file content'
-  }
-];
-
-const { results, newFiles } = await ToolRunner.runTools(workingFiles, toolUsages);
-```
+The project uses a configuration file for logging settings. You can modify the `log-config.json` file in the project root to adjust logging behavior.
 
 ## Testing
 
