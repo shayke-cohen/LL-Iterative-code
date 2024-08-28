@@ -100,68 +100,71 @@ export class RealLLM extends LLMInterface {
 
   protected generateCodePrompt(task: Task, toolResults: ToolResults): string {
     let prompt = `
-  You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
-  
-  Original Task Description: ${task.description}
-  Current Task Description: ${task.currentTaskDescription || task.description}
-  
-  Relevant Files:
-  ${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
-  
-  Working Files:
-  ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
-  
-  Previous Tool Results:
-  ${Object.entries(toolResults).map(([tool, result]) => {
-    if (typeof result === 'object' && result !== null && 'success' in result) {
-      return `${tool}: ${result.success ? 'Success' : 'Failure'}\nMessage: ${result.message}`;
-    } else {
-      return `${tool}: ${result}`;
-    }
-  }).join('\n\n')}
-  `;
-  
+You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
+
+Original Task Description: ${task.description}
+Current Task Description: ${task.currentTaskDescription || task.description}
+
+Relevant Files:
+${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+
+Working Files:
+${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+
+Previous Tool Results:
+${Object.entries(toolResults).map(([tool, result]) => {
+  if (typeof result === 'object' && result !== null && 'success' in result) {
+    return `${tool}: ${result.success ? 'Success' : 'Failure'}\nMessage: ${result.message}`;
+  } else {
+    return `${tool}: ${result}`;
+  }
+}).join('\n\n')}
+`;
+
     if (this.additionalClarifications.length > 0) {
       prompt += `
-  Accumulated Questions and Answers:
-  ${this.additionalClarifications.map(qa => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n\n')}
-  `;
+Accumulated Questions and Answers:
+${this.additionalClarifications.map(qa => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n\n')}
+`;
     }
-  
+
     prompt += `
-  ${this.generateToolInstructions()}
-  
-  Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
-  
-  {
-    "toolUsages": [
-      {
-        "name": "toolName",
-        "params": {
-          "param1": "value1",
-          "param2": "value2"
-        },
-        "reasoning": "Explanation for using this tool"
-      }
-    ],
-    "questions": [
-      "Any new questions for the user, if applicable"
-    ],
-    "isTaskComplete": false,
-    "completionReason": "If isTaskComplete is true, provide a reason here",
-    "actionsSummary": "A brief summary of the actions taken in this iteration"
-  }
-  
-  Important Instructions:
-  1. Focus on addressing the current task description while keeping the original task in mind.
-  2. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
-  3. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
-  4. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
-  5. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
-  
-  Ensure that your response is a valid JSON string.
-  `;
-  
+${this.generateToolInstructions()}
+
+Important Instructions:
+1. Focus on addressing the current task description while keeping the original task in mind.
+2. Do not ask for file contents. If a file is mentioned in the relevant files, its content will be provided automatically.
+3. Do not ask for Jest test results or TypeScript compilation results. These will be provided automatically in the next iteration if you run the respective tools.
+4. If you need to create a new file or update an existing one, use the "updateFile" tool.
+5. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+6. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+7. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
+8. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
+
+Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
+
+{
+  "toolUsages": [
+    {
+      "name": "toolName",
+      "params": {
+        "param1": "value1",
+        "param2": "value2"
+      },
+      "reasoning": "Explanation for using this tool"
+    }
+  ],
+  "questions": [
+    "Any new questions for the user, if applicable"
+  ],
+  "isTaskComplete": false,
+  "completionReason": "If isTaskComplete is true, provide a reason here",
+  "actionsSummary": "A brief summary of the actions taken in this iteration"
+}
+
+Ensure that your response is a valid JSON string.
+`;
+
     return prompt;
   }
 
