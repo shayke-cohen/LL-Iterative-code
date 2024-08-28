@@ -1,5 +1,4 @@
-
-{
+  {
     "compilerOptions": {
       "target": "es2018",
       "module": "commonjs",
@@ -8,6 +7,6 @@
       "outDir": "./dist",
       "rootDir": "./src"
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "core/**/*"],
     "exclude": ["node_modules", "**/*.test.ts"]
   }

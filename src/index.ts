@@ -1,3 +1,4 @@
+import { logger } from './core/initLogger';
 import { TaskInitializer, Task, File } from './core/TaskInitializer';
 import { LLMInterface, ToolResults, LLMResponse } from './core/LLMInterface';
 import { ToolRunner } from './core/ToolRunner';
@@ -7,9 +8,9 @@ import { ConfigManager } from './core/ConfigManager';
 import { HistoryManager } from './core/HistoryManager';
 import { CLIInterface } from './cli/CLIInterface';
 import { RealLLM } from './core/RealLLM';
+import { selectRelevantFiles, getProjectStructure } from './core/file-selector';
 import * as path from 'path';
 import * as fs from 'fs';
-
 
 async function main() {
   const cli = new CLIInterface();
@@ -20,16 +21,7 @@ async function main() {
 
   const absoluteProjectRoot = path.resolve(projectRoot);
 
-  console.log(`Using project directory: ${absoluteProjectRoot}`);
-
-  // Initialize ConfigManager and load configuration
-  const configManager = ConfigManager.getInstance();
-  configManager.loadConfig();
-  const logConfig = configManager.getConfig();
-
-  // Initialize Logger
-  Logger.initialize(logConfig, absoluteProjectRoot);
-  const logger = Logger.getInstance();
+  logger.logMainFlow(`Using project directory: ${absoluteProjectRoot}`);
 
   ToolRunner.initialize(absoluteProjectRoot);
 
@@ -43,10 +35,32 @@ async function main() {
   const taskDescription = await cli.askQuestion(`Enter the task description (default: "${defaultTask}"): `);
   const finalTaskDescription = taskDescription.trim() || defaultTask;
 
+  // Get project structure
+  const projectStructure = await getProjectStructure(absoluteProjectRoot);
+
+  // Select relevant files
+  const maxIterations = 5;
+  const maxFiles = 20;
+  const maxTotalSize = 100000; // 100k
+  const relevantFiles = await selectRelevantFiles(
+    finalTaskDescription,
+    projectStructure,
+    maxIterations,
+    maxFiles,
+    maxTotalSize,
+    absoluteProjectRoot
+  );
+
+  // Convert relevantFiles to the File type expected by TaskInitializer
+  const taskFiles: File[] = relevantFiles.map(file => ({
+    fileName: file.name,
+    contentSnippet: file.content
+  }));
+
   const task: Task = TaskInitializer.initialize(
     finalTaskDescription,
-    [],
-    [],
+    taskFiles, // Use taskFiles for both relevantFiles and workingFiles
+    taskFiles,
     absoluteProjectRoot,
     true
   );
