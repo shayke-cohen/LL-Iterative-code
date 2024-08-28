@@ -30,6 +30,10 @@ class FileManager {
     const filePath = path.join(this.projectRoot, file.fileName);
 
     try {
+      // Ensure the directory exists
+      const dirPath = path.dirname(filePath);
+      fs.mkdirSync(dirPath, { recursive: true });
+
       fs.writeFileSync(filePath, file.contentSnippet);
       this.logger.logMainFlow(`Updated file ${file.fileName}`);
       return true;

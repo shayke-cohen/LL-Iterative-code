@@ -107,17 +107,19 @@ async function main() {
       }
 
       // Update relevant and working files
-      const allRelevantFiles = new Set([
+      const allRelevantFileNames = new Set([
         ...task.relevantFiles.map(file => file.fileName),
         ...task.workingFiles.map(file => file.fileName),
         ...modifiedFiles,
         ...newFiles.map(file => file.fileName)
       ]);
 
-      const updatedFiles = await readFilesFromDisk(Array.from(allRelevantFiles), absoluteProjectRoot);
+      const updatedFiles = await readFilesFromDisk(Array.from(allRelevantFileNames), absoluteProjectRoot);
 
-      task.relevantFiles = updatedFiles;
-      task.workingFiles = updatedFiles;
+      // Ensure uniqueness of relevant files
+      const uniqueRelevantFiles = new Map<string, File>(updatedFiles.map(file => [file.fileName, file]));
+      task.relevantFiles = Array.from(uniqueRelevantFiles.values());
+      task.workingFiles = task.relevantFiles;
 
       // Analysis Phase
       const analysis = await llm.analyzeResults(task, toolResults);
@@ -131,7 +133,9 @@ async function main() {
       // Update relevant files based on analysis
       if (analysis.relevantFiles && analysis.relevantFiles.length > 0) {
         const analysisRelevantFiles = await readFilesFromDisk(analysis.relevantFiles, absoluteProjectRoot);
-        task.relevantFiles = [...task.relevantFiles, ...analysisRelevantFiles];
+        // Merge new relevant files while maintaining uniqueness
+        analysisRelevantFiles.forEach(file => uniqueRelevantFiles.set(file.fileName, file));
+        task.relevantFiles = Array.from(uniqueRelevantFiles.values());
       }
 
       // Update history with action summary
