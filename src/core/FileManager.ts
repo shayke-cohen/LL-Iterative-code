@@ -5,9 +5,11 @@ import { Logger } from './Logger';
 
 class FileManager {
   private projectRoot: string;
+  private logger: Logger;
 
   constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
+    this.logger = Logger.getInstance();
   }
 
   moveFile(source: string, destination: string): boolean {
@@ -16,10 +18,10 @@ class FileManager {
 
     try {
       fs.renameSync(sourcePath, destinationPath);
-      Logger.log(`Moved file from ${source} to ${destination}`);
+      this.logger.logMainFlow(`Moved file from ${source} to ${destination}`);
       return true;
     } catch (error) {
-      Logger.error(`Failed to move file from ${source} to ${destination}: ${(error as Error).message}`);
+      this.logger.logToolStderr(`Failed to move file from ${source} to ${destination}: ${(error as Error).message}`);
       return false;
     }
   }
@@ -28,14 +30,11 @@ class FileManager {
     const filePath = path.join(this.projectRoot, file.fileName);
 
     try {
-      // Ensure the directory exists
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
       fs.writeFileSync(filePath, file.contentSnippet);
-      Logger.log(`Updated file ${file.fileName}`);
+      this.logger.logMainFlow(`Updated file ${file.fileName}`);
       return true;
     } catch (error) {
-      Logger.error(`Failed to update file ${file.fileName}: ${(error as Error).message}`);
+      this.logger.logToolStderr(`Failed to update file ${file.fileName}: ${(error as Error).message}`);
       return false;
     }
   }
@@ -45,10 +44,10 @@ class FileManager {
 
     try {
       fs.unlinkSync(filePath);
-      Logger.log(`Deleted file ${fileName}`);
+      this.logger.logMainFlow(`Deleted file ${fileName}`);
       return true;
     } catch (error) {
-      Logger.error(`Failed to delete file ${fileName}: ${(error as Error).message}`);
+      this.logger.logToolStderr(`Failed to delete file ${fileName}: ${(error as Error).message}`);
       return false;
     }
   }

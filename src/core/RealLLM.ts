@@ -4,45 +4,46 @@ import { Logger } from './Logger';
 import { runPrompt } from './runPrompt';
 
 export class RealLLM extends LLMInterface {
-  
   private lastAnalysisRecommendations: string = '';
   private additionalClarifications: { question: string; answer: string }[] = [];
+  private logger: Logger;
 
+  constructor() {
+    super();
+    this.logger = Logger.getInstance();
+  }
 
   async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateCodePrompt(task, toolResults);
+      this.logger.logLLMRequest("Generating code prompt:\n" + prompt);
 
-      // log prompt
-      Logger.log("Prompt for code generation: " + prompt);
-      
       try {
         const response = await runPrompt({
           prompt,
-          taskDescription: task.currentTaskDescription || task.description,
+          taskDescription: 'Code Generation',
           useCache: true, 
           model: 'gpt-4o' 
         });
-  
+
         if (!response) {
           throw new Error('No response received from LLM');
         }
-  
-        Logger.log("Received generate response from LLM:\n " + response);
-  
+
+        this.logger.logLLMResponse("Received generate response from LLM:\n " + response);
+
         try {
-          const cleanedResponse = this.cleanJsonString(response);
-          let parsedResponse = this.parseResponse(cleanedResponse);
+          const parsedResponse = this.parseJSONResponse(response);
           if (!parsedResponse.actionsSummary) {
             parsedResponse.actionsSummary = "No actions summary provided";
           }
           return parsedResponse;
         } catch (parseError) {
-          Logger.error("Failed to parse LLM response: "+ parseError);
+          this.logger.logToolStderr("Failed to parse LLM response: " + parseError);
           throw new Error('Invalid response format from LLM');
         }
       } catch (error) {
-        Logger.error("Error in code generation: " + error);
+        this.logger.logToolStderr("Error in code generation: " + error);
         throw error;
       }
     });
@@ -51,9 +52,7 @@ export class RealLLM extends LLMInterface {
   async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       const prompt = this.generateAnalysisPrompt(task, toolResults);
-  
-      // log prompt
-      Logger.log("Prompt for result analysis: " + prompt);
+      this.logger.logLLMRequest("Prompt for result analysis: " + prompt);
 
       try {
         const response = await runPrompt({
@@ -62,12 +61,13 @@ export class RealLLM extends LLMInterface {
           useCache: true, 
           model: 'gpt-4o' 
         });
-  
+
         if (!response) {
           throw new Error('No response received from LLM');
         }
-  
-        Logger.log("Received analyze response from LLM:\n " + response);
+
+        this.logger.logLLMResponse("Received analyze response from LLM:\n " + response);
+
   
         // Extract JSON part from the response
         const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -92,7 +92,7 @@ export class RealLLM extends LLMInterface {
   
         return llmResponse;
       } catch (error) {
-        Logger.error("Error in result analysis: " + error);
+        this.logger.logToolStderr("Error in result analysis: " + error);
         throw error;
       }
     });
@@ -221,23 +221,41 @@ IMPORTANT: Your response must be a valid JSON object only, without any additiona
     this.additionalClarifications.push(...clarifications);
   }
 
-  private cleanJsonString(jsonString: string): string {
-    // Remove any potential leading/trailing non-JSON content
-    const jsonStart = jsonString.indexOf('{');
-    const jsonEnd = jsonString.lastIndexOf('}') + 1;
-    if (jsonStart === -1 || jsonEnd === 0) {
-      throw new Error('No valid JSON object found in the response');
+  private parseJSONResponse(response: string): LLMResponse {
+    // First, try to parse the entire response as JSON
+    try {
+      return JSON.parse(response) as LLMResponse;
+    } catch (error) {
+      // If that fails, try to extract the JSON part
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonPart = jsonMatch[0];
+        try {
+          // Try to parse the extracted JSON
+          return JSON.parse(jsonPart) as LLMResponse;
+        } catch (innerError) {
+          // If that also fails, try to clean the JSON string
+          const cleanedJson = this.cleanJSONString(jsonPart);
+          return JSON.parse(cleanedJson) as LLMResponse;
+        }
+      }
+      // If we can't extract JSON, throw an error
+      throw new Error('No valid JSON found in the response');
     }
-    jsonString = jsonString.slice(jsonStart, jsonEnd);
+  }
 
+  private cleanJSONString(jsonString: string): string {
+    // Remove any potential leading/trailing non-JSON content
+    jsonString = jsonString.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+  
     // Escape special characters in string values
-    return jsonString.replace(/("(?:\\"|[^"])*")/g, (match) => {
+    return jsonString.replace(/("(?:\\.|[^"\\])*")/g, (match) => {
       return match.replace(/[\n\r\t]/g, (escapeChar) => {
         switch (escapeChar) {
           case '\n': return '\\n';
           case '\r': return '\\r';
           case '\t': return '\\t';
-          default: return escapeChar; // This line ensures we always return a string
+          default: return escapeChar;
         }
       });
     });

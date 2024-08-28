@@ -1,0 +1,16 @@
+{
+    "llm": {
+      "requests": true,
+      "responses": true
+    },
+    "tools": {
+      "execution": true,
+      "stdout": false,
+      "stderr": true
+    },
+    "main": {
+      "flow": true,
+      "iterationProgress": true
+    },
+    "logLevel": "info"
+  }

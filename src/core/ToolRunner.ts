@@ -10,26 +10,28 @@ import path from 'path';
 export class ToolRunner {
   private static fileManager: FileManager;
   private static projectRoot: string;
+  private static logger: Logger;
 
   static initialize(projectRoot: string): void {
     this.fileManager = new FileManager(projectRoot);
     this.projectRoot = projectRoot;
+    this.logger = Logger.getInstance();
   }
 
   static async runCommand(command: string): Promise<ToolResult> {
     return new Promise((resolve) => {
       exec(command, { cwd: this.projectRoot }, (error, stdout, stderr) => {
         if (error) {
-          Logger.error(`Command execution failed: ${command}`);
-          Logger.error(`Error: ${error.message}`);
-          Logger.error(`stderr: ${stderr}`);
-          Logger.error(`stdout: ${stdout}`);
+          this.logger.logToolStderr(`Command execution failed: ${command}`);
+          this.logger.logToolStderr(`Error: ${error.message}`);
+          this.logger.logToolStderr(`stderr: ${stderr}`);
+          this.logger.logToolStderr(`stdout: ${stdout}`);
           resolve({
             success: false,
             message: `Execution failed. Error: ${error.message}\nstderr: ${stderr}\nstdout: ${stdout}`
           });
         } else {
-          Logger.log(`Command executed successfully: ${command}`);
+          this.logger.logToolExecution(`Command executed successfully: ${command}`);
           resolve({
             success: true,
             message: "Execution successful."
@@ -44,17 +46,15 @@ export class ToolRunner {
     let newFiles: File[] = [];
     let modifiedFiles: string[] = [];
 
-    // Check if toolUsages is undefined or empty
     if (!toolUsages || toolUsages.length === 0) {
-      Logger.log('No tool usages specified. Skipping tool execution.');
+      this.logger.logMainFlow('No tool usages specified. Skipping tool execution.');
       return { results, newFiles, modifiedFiles };
     }
 
-    // Execute specific tool usages
     for (const usage of toolUsages) {
       try {
         if (!usage.name) {
-          Logger.error('Invalid tool usage: missing tool name');
+          this.logger.logToolStderr('Invalid tool usage: missing tool name');
           continue;
         }
 
@@ -106,9 +106,9 @@ export class ToolRunner {
             results[resultKey] = await ToolRunner.runCommand(`yarn add ${usage.params.package}`);
             break;
           default:
-            Logger.log(`Unrecognized tool: ${usage.name}`);
+            this.logger.logMainFlow(`Unrecognized tool: ${usage.name}`);
         }
-        Logger.log(`Executed ${usage.name} with reasoning: ${usage.reasoning}`);
+        this.logger.logMainFlow(`Executed ${usage.name} with reasoning: ${usage.reasoning}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         results[`${usage.name}|${Object.entries(usage.params || {}).map(([key, value]) => `${key}=${value}`).join(',')}`] = {
@@ -118,14 +118,13 @@ export class ToolRunner {
       }
     }
 
-    // Ensure dependencies are installed
     if (!fs.existsSync(path.join(this.projectRoot, 'node_modules'))) {
       try {
-        Logger.log('Installing dependencies...');
+        this.logger.logMainFlow('Installing dependencies...');
         results['yarnInstall'] = await ToolRunner.runCommand('yarn install');
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        Logger.error(`Failed to install dependencies: ${errorMessage}`);
+        this.logger.logToolStderr(`Failed to install dependencies: ${errorMessage}`);
         results['yarnInstall'] = {
           success: false,
           message: `Failed to install dependencies: ${errorMessage}`
@@ -174,7 +173,7 @@ export class ToolRunner {
         const content = await fs.promises.readFile(filePath, 'utf-8');
         return { fileName, contentSnippet: content };
       } catch (error) {
-        Logger.error(`Failed to read file ${fileName}: ${error}`);
+        this.logger.logToolStderr(`Failed to read file ${fileName}: ${error}`);
         return { fileName, contentSnippet: '' };
       }
     }));
