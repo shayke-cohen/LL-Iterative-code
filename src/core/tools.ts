@@ -30,6 +30,8 @@ export async function findFilesByContent(pattern: string, workingDir: string): P
   const allFiles = await findFilesByName('**/*', workingDir);
   const matchingFiles: string[] = [];
 
+  logger.logMainFlow(`Searching ${allFiles.length} files for pattern: ${pattern}`);
+
   for (const file of allFiles) {
     try {
       const fullPath = path.join(workingDir, file);
@@ -37,25 +39,35 @@ export async function findFilesByContent(pattern: string, workingDir: string): P
       const content = await fs.promises.readFile(fullPath, 'utf-8');
       if (content.includes(pattern)) {
         matchingFiles.push(file);
+        logger.logMainFlow(`Found match in file: ${file}`);
       }
     } catch (error) {
       logger.logToolStderr(`Error reading file ${file}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
+  logger.logMainFlow(`Found ${matchingFiles.length} files containing the pattern`);
   return matchingFiles;
 }
 
 export async function findImportedFiles(file: string, workingDir: string): Promise<string[]> {
   try {
-    const content = await fs.promises.readFile(file, 'utf-8');
+    const fullPath = path.resolve(workingDir, file);
+    const content = await fs.promises.readFile(fullPath, 'utf-8');
     const importRegex = /import.*from\s+['"](.+)['"]/g;
     const imports: string[] = [];
     let match;
 
     while ((match = importRegex.exec(content)) !== null) {
-      const importPath = resolveImportPath(file, match[1]);
-      imports.push(path.relative(workingDir, importPath));
+      const importPath = match[1];
+      if (importPath.startsWith('.')) {
+        // Resolve relative imports
+        const resolvedPath = path.resolve(path.dirname(fullPath), importPath);
+        imports.push(path.relative(workingDir, resolvedPath));
+      } else {
+        // For non-relative imports, just add the import path
+        imports.push(importPath);
+      }
     }
 
     return imports;
@@ -72,10 +84,26 @@ function resolveImportPath(baseFile: string, importPath: string): string {
   return importPath;
 }
 
-export async function findRelatedTests(file: string, workingDir: string): Promise<string[]> {
-  const baseName = path.basename(file, path.extname(file));
-  const testPattern = `**/${baseName}.test.{ts,tsx,js,jsx}`;
-  return findFilesByName(testPattern, workingDir);
+export async function findRelatedTests(fileOrDir: string, workingDir: string): Promise<string[]> {
+  const fullPath = path.resolve(workingDir, fileOrDir);
+  try {
+    const stats = await fs.promises.stat(fullPath);
+    if (stats.isDirectory()) {
+      const testPattern = path.join(fileOrDir, '**/*.test.{ts,tsx,js,jsx}');
+      return findFilesByName(testPattern, workingDir);
+    } else {
+      const baseName = path.basename(fileOrDir, path.extname(fileOrDir));
+      const testPattern = `**/${baseName}.test.{ts,tsx,js,jsx}`;
+      return findFilesByName(testPattern, workingDir);
+    }
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+      logger.logToolStderr(`File or directory not found: ${fileOrDir}`);
+    } else {
+      logger.logToolStderr(`Error in findRelatedTests: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return [];
+  }
 }
 
 export async function findComponentUsage(component: string, workingDir: string): Promise<string[]> {
@@ -185,13 +213,24 @@ export async function findRelatedClasses(file: string, workingDir: string): Prom
 export async function findExternalDependency(moduleName: string, workingDir: string): Promise<string[]> {
   const possiblePaths = [
     path.join(workingDir, 'node_modules', moduleName, 'index.d.ts'),
+    path.join(workingDir, 'node_modules', moduleName, 'index.js'),
     path.join(workingDir, 'node_modules', '@types', moduleName, 'index.d.ts'),
-    path.join(workingDir, 'node_modules', moduleName, 'dist', 'index.d.ts'),
-    path.join(workingDir, 'node_modules', moduleName, 'lib', 'index.d.ts')
   ];
 
   const existingPaths = await Promise.all(
-    possiblePaths.map(async (p) => (await fs.promises.stat(p).then(() => true).catch(() => false)) ? p : null)
+    possiblePaths.map(async (p) => {
+      try {
+        await fs.promises.stat(p);
+        return p;
+      } catch (error) {
+        // Only log errors for unexpected situations
+        if (error instanceof Error && 'code' in error && error.code !== 'ENOENT') {
+
+          console.error(`Unexpected error checking path ${p} for ${moduleName}:`, error);
+        }
+        return null;
+      }
+    })
   );
 
   return existingPaths.filter((p): p is string => p !== null).map(p => path.relative(workingDir, p));

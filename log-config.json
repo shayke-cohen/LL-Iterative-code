@@ -6,7 +6,7 @@
     "tools": {
       "execution": true,
       "stdout": false,
-      "stderr": true
+      "stderr": false
     },
     "main": {
       "flow": true,

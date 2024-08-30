@@ -1,6 +1,5 @@
 import { Task, File } from './TaskInitializer';
 
-
 export interface ToolResult {
   success: boolean;
   message: string;
@@ -9,12 +8,6 @@ export interface ToolResult {
 export interface ToolResults {
   [key: string]: ToolResult;
 }
-
-/*
-export interface ToolResults {
-  [key: string]: string | { stdout: string; stderr: string; error?: string };
-}
-*/
 
 export interface ToolUsage {
   name: string;
@@ -120,7 +113,7 @@ Include these toolUsages in your JSON response along with any updated files and 
 `;
   }
 
-  protected generateCodePrompt(task: Task, toolResults: ToolResults, history: string[]): string {
+  protected generateCodePrompt(task: Task, toolResults: ToolResults): string {
     return `
 You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
 
@@ -133,10 +126,7 @@ Working Files:
 ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
 
 Previous Tool Results:
-${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${result}`).join('\n\n')}
-
-Task History:
-${history.join('\n')}
+${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${JSON.stringify(result)}`).join('\n\n')}
 
 Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
 
@@ -167,7 +157,7 @@ Ensure that your response is a valid JSON string.
 `;
   }
 
-  protected generateAnalysisPrompt(task: Task, toolResults: ToolResults, history: string[]): string {
+  protected generateAnalysisPrompt(task: Task, toolResults: ToolResults): string {
     return `
 You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs. Here's the relevant information:
 
@@ -177,10 +167,7 @@ Current Working Files:
 ${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
 
 Tool Results:
-${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${result}`).join('\n\n')}
-
-Task History:
-${history.join('\n')}
+${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${JSON.stringify(result)}`).join('\n\n')}
 
 Based on this information, please analyze the results and provide feedback. Your response should be a JSON object with the following structure:
 
@@ -188,14 +175,19 @@ Based on this information, please analyze the results and provide feedback. Your
   "toolUsages": [],
   "questions": [],
   "isTaskComplete": false,
-  "completionReason": null
+  "completionReason": null,
+  "actionsSummary": "A brief summary of the analysis and suggested actions",
+  "relevantFiles": ["List of relevant file names"],
+  "newTaskDefinition": "If needed, a new task definition"
 }
 
 Important Instructions:
 1. Do not include any questions in the "questions" array. Leave it empty.
 2. Do not suggest any tool usages. Leave the "toolUsages" array empty.
-3. Always set "isTaskComplete" to false and "completionReason" to null.
-4. Focus on providing analysis and feedback through the "updatedFiles" array if any code changes are needed based on the tool results.
+3. Set "isTaskComplete" to true only if you're certain the entire task is complete.
+4. Provide a brief summary of the analysis in the "actionsSummary" field.
+5. List any relevant files that need attention in the "relevantFiles" array.
+6. If a new task definition is needed, provide it in the "newTaskDefinition" field.
 
 Ensure that your response is a valid JSON string.
 `;

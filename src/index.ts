@@ -15,7 +15,8 @@ import * as fs from 'fs';
 async function main() {
   const cli = new CLIInterface();
 
-  const defaultProjectRoot = '/Users/shayco/GitHub/temp/netmock-js';
+  //const defaultProjectRoot = '/Users/shayco/GitHub/temp/netmock-js';
+  const defaultProjectRoot = '/Users/shayco/GitHub/temp-playground';
   const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
   const projectRoot = projectRootInput.trim() || defaultProjectRoot;
 
@@ -73,7 +74,7 @@ async function main() {
         const content = await fs.promises.readFile(filePath, 'utf-8');
         return { fileName, contentSnippet: content };
       } catch (error) {
-        logger.logToolStderr(`Failed to read file ${fileName}: ${error}`);
+        logger.logToolStderr(`Warning: Failed to read file ${fileName}: ${error}`);
         return { fileName, contentSnippet: '' };
       }
     }));
@@ -98,6 +99,17 @@ async function main() {
       // Code Generation Phase
       const codeGeneration = await llm.generateCode(task, toolResults);
 
+      // Log tools requested by generateCode
+      if (codeGeneration.toolUsages && codeGeneration.toolUsages.length > 0) {
+        const requestedTools = codeGeneration.toolUsages.map(tool => `${tool.name} (${JSON.stringify(tool.params)})`).join(', ');
+        logger.logInfo(`Tools requested by generateCode: ${requestedTools}`);
+      } else {
+        logger.logInfo("No tools were requested by generateCode");
+      }
+
+      // Log tools requested by LLM
+      logger.logMainFlow(`LLM requested the following tools: ${codeGeneration.toolUsages.map(t => t.name).join(', ')}`);
+
       // Handle questions if any
       if (codeGeneration.questions && codeGeneration.questions.length > 0) {
         logger.logMainFlow("LLM has questions. Presenting them to the user.");
@@ -121,6 +133,11 @@ async function main() {
 
       // Run tools including LLM-suggested actions
       const { results: newToolResults, newFiles, modifiedFiles } = await ToolRunner.runTools(task.workingFiles, codeGeneration.toolUsages);
+
+      // Log results of tool execution
+      Object.entries(newToolResults).forEach(([toolName, result]) => {
+        logger.logMainFlow(`Tool ${toolName} execution ${result.success ? 'succeeded' : 'failed'}: ${result.message}`);
+      });
 
       // Update toolResults for the next iteration
       toolResults = newToolResults;

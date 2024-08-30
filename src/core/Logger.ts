@@ -68,6 +68,10 @@ export class Logger {
     }
   }
 
+  logInfo(message: string): void {
+    this.log('Info', message, colors.blue);
+  }
+  
   private log(category: string, message: string, colorFunc: ColorFunction): void {
     if (this.shouldLog(category)) {
       const timestamp = new Date().toISOString();

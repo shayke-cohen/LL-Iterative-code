@@ -66,7 +66,7 @@ async function getProjectStructure(dir: string, indent: string = '', isLast: boo
 }
 
 async function findExternalDependency(moduleName: string, workingDir: string): Promise<FileInfo[]> {
-  logger.logMainFlow(`findExternalDependency called with moduleName: ${moduleName}, workingDir: ${workingDir}`);
+  logger.logMainFlow(`Searching for external dependency: ${moduleName}`);
 
   if (!moduleName) {
     logger.logToolStderr("Module name is undefined in findExternalDependency");
@@ -75,16 +75,11 @@ async function findExternalDependency(moduleName: string, workingDir: string): P
 
   const possiblePaths = [
     path.join(workingDir, 'node_modules', moduleName, 'index.js'),
-    path.join(workingDir, 'node_modules', moduleName, 'index.ts'),
-    path.join(workingDir, 'node_modules', moduleName, 'lib', 'index.js'),
-    path.join(workingDir, 'node_modules', moduleName, 'lib', 'index.ts'),
-    path.join(workingDir, 'node_modules', moduleName, 'dist', 'index.js'),
-    path.join(workingDir, 'node_modules', moduleName, 'dist', 'index.ts'),
-    path.join(workingDir, 'node_modules', '@types', moduleName, 'index.d.ts'),
     path.join(workingDir, 'node_modules', moduleName, 'index.d.ts'),
+    path.join(workingDir, 'node_modules', '@types', moduleName, 'index.d.ts'),
   ];
 
-  logger.logMainFlow(`Possible paths for ${moduleName}: ${JSON.stringify(possiblePaths)}`);
+  logger.logMainFlow(`Checking paths for ${moduleName}: ${JSON.stringify(possiblePaths)}`);
 
   const existingPaths = await Promise.all(
     possiblePaths.map(async (p) => {
@@ -102,7 +97,10 @@ async function findExternalDependency(moduleName: string, workingDir: string): P
           };
         }
       } catch (error) {
-        logger.logToolStderr(`Error checking path ${p} for ${moduleName}: ${error}`);
+        // Only log errors for paths we expect to exist
+        if (p.includes('@types') || p.endsWith('index.js')) {
+          logger.logToolStderr(`Error checking expected path ${p} for ${moduleName}: ${error}`);
+        }
       }
       return null;
     })
@@ -325,60 +323,81 @@ function parseLLMResponse(response: string): LLMResponse {
 }
 
 async function executeTool(tool: Tool, workingDir: string): Promise<FileInfo[]> {
+  logger.logToolExecution(`Executing tool: ${tool.name} with params: ${JSON.stringify(tool.params)}`);
   try {
-    return await executeToolForFileNames(tool, workingDir);
+    const result = await executeToolForFileNames(tool, workingDir);
+    logger.logToolExecution(`Tool ${tool.name} executed successfully, returning ${result.length} files`);
+    return result;
   } catch (error) {
-    console.error(`Error executing tool ${tool.name}:`, error instanceof Error ? error.message : String(error));
+    logger.logToolExecution(`Tool ${tool.name} execution failed: ${error instanceof Error ? error.message : String(error)}`);
     return [];
   }
 }
 
-async function executeToolForFileNames(tool: Tool, workingDir: string): Promise<FileInfo[]> {
-  logger.logMainFlow(`executeToolForFileNames called with tool: ${JSON.stringify(tool)}, workingDir: ${workingDir}`);
 
-  switch (tool.name) {
-    case "findFilesByName":
-      const files = await findFilesByName(tool.params.pattern, workingDir);
-      return files.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findFilesByContent":
-      const contentFiles = await findFilesByContent(tool.params.pattern, workingDir);
-      return contentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findImportedFiles":
-      const importedFiles = await findImportedFiles(path.join(workingDir, tool.params.file), workingDir);
-      return importedFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findRelatedTests":
-      const testFiles = await findRelatedTests(path.join(workingDir, tool.params.file), workingDir);
-      return testFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findComponentUsage":
-      const usageFiles = await findComponentUsage(tool.params.component, workingDir);
-      return usageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findAPIUsage":
-      const apiUsageFiles = await findAPIUsage(tool.params.endpoint, workingDir);
-      return apiUsageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findStyleDependencies":
-      const styleFiles = await findStyleDependencies(tool.params.component, workingDir);
-      return styleFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findFunctionDefinition":
-      const functionFiles = await findFunctionDefinition(tool.params.functionName, workingDir);
-      return functionFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findDependencies":
-      const dependencyFiles = await findDependencies(path.join(workingDir, tool.params.file), workingDir);
-      return dependencyFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findRecentlyModifiedFiles":
-      const recentFiles = await findRecentlyModifiedFiles(tool.params.days, workingDir);
-      return recentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-    case "findRelatedClasses":
-      const relatedClassFiles = await findRelatedClasses(tool.params.file, workingDir);
-      return relatedClassFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
-      case "findExternalDependency":
-      if (!tool.params.module) {  // Changed from tool.params.moduleName to tool.params.module
-        logger.logToolStderr("Module name is undefined for findExternalDependency");
-        return [];
-      }
-      logger.logMainFlow(`Calling findExternalDependency with module: ${tool.params.module}`);
-      return findExternalDependency(tool.params.module, workingDir);  // Changed from tool.params.moduleName to tool.params.module
-    default:
-      throw new Error(`Unknown tool: ${tool.name}`);
+async function executeToolForFileNames(tool: Tool, workingDir: string): Promise<FileInfo[]> {
+  try {
+    
+    logger.logMainFlow(`executeToolForFileNames called with tool: ${JSON.stringify(tool)}, workingDir: ${workingDir}`);
+
+    switch (tool.name) {
+      case "findFilesByName":
+        logger.logToolExecution(`Executing findFilesByName with pattern: ${tool.params.pattern}`);
+        const files = await findFilesByName(tool.params.pattern, workingDir);
+        return files.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findFilesByContent":
+        logger.logToolExecution(`Executing findFilesByContent with pattern: ${tool.params.pattern}`);
+        const contentFiles = await findFilesByContent(tool.params.pattern, workingDir);
+        return contentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findImportedFiles":
+        logger.logToolExecution(`Executing findImportedFiles with file: ${tool.params.file}`);
+        const importedFiles = await findImportedFiles(path.join(workingDir, tool.params.file), workingDir);
+        return importedFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findRelatedTests":
+        logger.logToolExecution(`Executing findRelatedTests with file: ${tool.params.file}`);
+        const testFiles = await findRelatedTests(path.join(workingDir, tool.params.file), workingDir);
+        return testFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findComponentUsage":
+        logger.logToolExecution(`Executing findComponentUsage with component: ${tool.params.component}`);
+        const usageFiles = await findComponentUsage(tool.params.component, workingDir);
+        return usageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findAPIUsage":
+        logger.logToolExecution(`Calling findAPIUsage with endpoint: ${tool.params.endpoint}`);
+        const apiUsageFiles = await findAPIUsage(tool.params.endpoint, workingDir);
+        return apiUsageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findStyleDependencies":
+        logger.logToolExecution(`Executing findStyleDependencies with component: ${tool.params.component}`);
+        const styleFiles = await findStyleDependencies(tool.params.component, workingDir);
+        return styleFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findFunctionDefinition":
+        logger.logToolExecution(`Executing findFunctionDefinition with functionName: ${tool.params.functionName}`);
+        const functionFiles = await findFunctionDefinition(tool.params.functionName, workingDir);
+        return functionFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findDependencies":
+        logger.logToolExecution(`Executing findDependencies with file: ${tool.params.file}`);
+        const dependencyFiles = await findDependencies(path.join(workingDir, tool.params.file), workingDir);
+        return dependencyFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findRecentlyModifiedFiles":
+        logger.logToolExecution(`Executing findRecentlyModifiedFiles with days: ${tool.params.days}`);
+        const recentFiles = await findRecentlyModifiedFiles(tool.params.days, workingDir);
+        return recentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findRelatedClasses":
+        logger.logToolExecution(`Executing findRelatedClasses with file: ${tool.params.file}`);
+        const relatedClassFiles = await findRelatedClasses(tool.params.file, workingDir);
+        return relatedClassFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+        case "findExternalDependency":
+        logger.logToolExecution(`Executing findExternalDependency with module: ${tool.params.module}`);
+        if (!tool.params.module) {
+          logger.logToolStderr("Module name is undefined for findExternalDependency");
+          return [];
+        }
+          return findExternalDependency(tool.params.module, workingDir);
+      default:
+        throw new Error(`Unknown tool: ${tool.name}`);
+    }
+  } catch (error) {
+    logger.logToolStderr(`Error executing tool ${tool.name}: ${error instanceof Error ? error.message : String(error)}`);
+    return [];
   }
 }
 

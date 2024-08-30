@@ -131,6 +131,7 @@ export class ToolRunner {
           success: false,
           message: `Failed: ${errorMessage}`
         };
+        this.logger.logToolStderr(`Error executing ${usage.name}: ${errorMessage}`);
       }
     }
 
