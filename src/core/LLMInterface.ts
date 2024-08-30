@@ -82,7 +82,7 @@ Available Tools and How to Use Them in Your Response:
      params: {}
 
    - Remove node_modules:
-     name: "removeNodeModules"
+     name: "removemodules"
      params: {}
 
 4. Task Completion:

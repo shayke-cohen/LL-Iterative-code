@@ -20,7 +20,8 @@ export class ToolRunner {
 
   static async runCommand(command: string): Promise<ToolResult> {
     return new Promise((resolve) => {
-      exec(command, { cwd: this.projectRoot }, (error, stdout, stderr) => {
+      const timeout = 120000; // 120 seconds in milliseconds
+      const child = exec(command, { cwd: this.projectRoot }, (error, stdout, stderr) => {
         if (error) {
           this.logger.logToolStderr(`Command execution failed: ${command}`);
           this.logger.logToolStderr(`Error: ${error.message}`);
@@ -37,6 +38,21 @@ export class ToolRunner {
             message: "Execution successful."
           });
         }
+      });
+
+      // Set up the timeout
+      const timer = setTimeout(() => {
+        child.kill(); // Terminate the child process
+        this.logger.logToolStderr(`Command timed out after ${timeout / 1000} seconds: ${command}`);
+        resolve({
+          success: false,
+          message: `Command timed out after ${timeout / 1000} seconds`
+        });
+      }, timeout);
+
+      // Clear the timeout if the command completes before the timeout
+      child.on('exit', () => {
+        clearTimeout(timer);
       });
     });
   }

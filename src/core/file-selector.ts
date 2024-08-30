@@ -1,5 +1,3 @@
-// file-selector.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 import { runPrompt } from './runPrompt';
@@ -17,8 +15,30 @@ import {
   findRelatedClasses
 } from './tools';
 import { Logger } from './Logger';
+const logger = Logger.getInstance();
 
-export async function getProjectStructure(dir: string, indent: string = '', isLast: boolean = true): Promise<string> {
+interface FileInfo {
+  name: string;
+  content: string;
+  size: number;
+  isTypeDefinition: boolean;
+  isExternalModule: boolean;
+  score?: number;
+}
+
+interface Tool {
+  name: string;
+  params: Record<string, any>;
+}
+
+interface LLMResponse {
+  allFilesFound: boolean;
+  tools: Tool[];
+  relevantFiles: Array<{ name: string, score: number }>;
+  reasoning: string;
+}
+
+async function getProjectStructure(dir: string, indent: string = '', isLast: boolean = true): Promise<string> {
   const baseName = path.basename(dir);
   let structure = `${indent}${isLast ? '└── ' : '├── '}${baseName}/\n`;
 
@@ -26,7 +46,6 @@ export async function getProjectStructure(dir: string, indent: string = '', isLa
   const directories = entries.filter(entry => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules');
   const files = entries.filter(entry => entry.isFile());
 
-  // Sort directories and files alphabetically
   directories.sort((a, b) => a.name.localeCompare(b.name));
   files.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -46,29 +65,72 @@ export async function getProjectStructure(dir: string, indent: string = '', isLa
   return structure;
 }
 
-interface FileInfo {
-  name: string;
-  content: string;
-  size: number;
-  score?: number;
+async function findExternalDependency(moduleName: string, workingDir: string): Promise<FileInfo[]> {
+  logger.logMainFlow(`findExternalDependency called with moduleName: ${moduleName}, workingDir: ${workingDir}`);
+
+  if (!moduleName) {
+    logger.logToolStderr("Module name is undefined in findExternalDependency");
+    return [];
+  }
+
+  const possiblePaths = [
+    path.join(workingDir, 'node_modules', moduleName, 'index.js'),
+    path.join(workingDir, 'node_modules', moduleName, 'index.ts'),
+    path.join(workingDir, 'node_modules', moduleName, 'lib', 'index.js'),
+    path.join(workingDir, 'node_modules', moduleName, 'lib', 'index.ts'),
+    path.join(workingDir, 'node_modules', moduleName, 'dist', 'index.js'),
+    path.join(workingDir, 'node_modules', moduleName, 'dist', 'index.ts'),
+    path.join(workingDir, 'node_modules', '@types', moduleName, 'index.d.ts'),
+    path.join(workingDir, 'node_modules', moduleName, 'index.d.ts'),
+  ];
+
+  logger.logMainFlow(`Possible paths for ${moduleName}: ${JSON.stringify(possiblePaths)}`);
+
+  const existingPaths = await Promise.all(
+    possiblePaths.map(async (p) => {
+      try {
+        const stats = await fs.promises.stat(p);
+        if (stats.isFile()) {
+          const content = await fs.promises.readFile(p, 'utf-8');
+          logger.logMainFlow(`Found file for ${moduleName}: ${p}`);
+          return {
+            name: path.relative(workingDir, p),
+            content,
+            size: stats.size,
+            isTypeDefinition: p.endsWith('.d.ts'),
+            isExternalModule: true
+          };
+        }
+      } catch (error) {
+        logger.logToolStderr(`Error checking path ${p} for ${moduleName}: ${error}`);
+      }
+      return null;
+    })
+  );
+
+  const result = existingPaths.filter((file): file is FileInfo => file !== null);
+  logger.logMainFlow(`findExternalDependency for ${moduleName} returning ${result.length} files`);
+  return result;
 }
 
-interface LLMResponse {
-  allFilesFound: boolean;
-  tools: Tool[];
-  relevantFiles: Array<{ name: string, score: number }>;
-  reasoning: string;
-}
-
-interface Tool {
-  name: string;
-  params: Record<string, any>;
-}
-
-interface FileInfo {
-  name: string;
-  content: string;
-  size: number;
+async function findAndReadFile(fileName: string, workingDir: string): Promise<FileInfo | null> {
+  const filePath = path.join(workingDir, fileName);
+  try {
+    const stats = await fs.promises.stat(filePath);
+    if (stats.isFile()) {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      return {
+        name: fileName,
+        content,
+        size: stats.size,
+        isTypeDefinition: fileName.endsWith('.d.ts'),
+        isExternalModule: false // Assuming local files are not external modules
+      };
+    }
+  } catch (error) {
+    console.log(`File not found or cannot be read: ${fileName}`);
+  }
+  return null;
 }
 
 async function selectRelevantFiles(
@@ -83,6 +145,7 @@ async function selectRelevantFiles(
   let iteration = 0;
   let totalSize = 0;
   const logger = Logger.getInstance();
+  const seenFiles = new Set<string>();
 
   while (iteration < maxIterations) {
     const llmResponse = await callLLM(task, relevantFiles, projectStructure);
@@ -100,9 +163,10 @@ async function selectRelevantFiles(
       try {
         const newFiles = await executeTool(tool, workingDir);
         for (const file of newFiles) {
-          if (!relevantFiles.some(f => f.name === file.name) && relevantFiles.length < maxFiles) {
+          if (!seenFiles.has(file.name) && relevantFiles.length < maxFiles) {
             if (totalSize + file.size <= maxTotalSize) {
               relevantFiles.push(file);
+              seenFiles.add(file.name);
               totalSize += file.size;
             } else {
               logger.logMainFlow(`Skipping file due to size limit: ${file.name}`);
@@ -116,7 +180,7 @@ async function selectRelevantFiles(
 
     // Handle potential files suggested by LLM
     for (const suggestedFile of llmResponse.relevantFiles) {
-      if (!relevantFiles.some(f => f.name === suggestedFile.name)) {
+      if (!seenFiles.has(suggestedFile.name)) {
         try {
           const fileInfo = await findAndReadFile(suggestedFile.name, workingDir);
           if (fileInfo && relevantFiles.length < maxFiles) {
@@ -125,6 +189,7 @@ async function selectRelevantFiles(
                 ...fileInfo,
                 score: suggestedFile.score
               });
+              seenFiles.add(fileInfo.name);
               totalSize += fileInfo.size;
             } else {
               logger.logMainFlow(`Skipping file due to size limit: ${fileInfo.name}`);
@@ -136,8 +201,11 @@ async function selectRelevantFiles(
               name: suggestedFile.name,
               content: `// Potential new file for: ${task}`,
               size: 0,
-              score: suggestedFile.score
+              score: suggestedFile.score,
+              isExternalModule: false,
+              isTypeDefinition: suggestedFile.name.endsWith('.d.ts')
             });
+            seenFiles.add(suggestedFile.name);
           }
         } catch (error) {
           logger.logToolStderr(`Error processing suggested file ${suggestedFile.name}: ${error instanceof Error ? error.message : String(error)}`);
@@ -154,135 +222,65 @@ async function selectRelevantFiles(
   return relevantFiles;
 }
 
-async function getFileInfo(fileName: string, workingDir: string): Promise<FileInfo | null> {
-  try {
-    const fullPath = path.join(workingDir, fileName);
-    const stats = await fs.promises.stat(fullPath);
-    if (stats.isFile()) {
-      const content = await fs.promises.readFile(fullPath, 'utf-8');
-      return {
-        name: fileName,
-        content,
-        size: stats.size
-      };
-    }
-  } catch (error) {
-    console.error(`Error getting file info for ${fileName}:`, error instanceof Error ? error.message : String(error));
-  }
-  return null;
+async function callLLM(task: string, relevantFiles: FileInfo[], projectStructure: string): Promise<LLMResponse> {
+  const prompt = constructPrompt(task, relevantFiles, projectStructure);
+  const response = await sendPromptToLLM(prompt);
+  return parseLLMResponse(response);
 }
 
+function constructPrompt(task: string, relevantFiles: FileInfo[], projectStructure: string): Record<string, any> {
+  return {
+    task,
+    relevantFiles: relevantFiles.map(file => ({
+      name: file.name,
+      content: file.content.substring(0, 2000),
+      isTypeDefinition: file.isTypeDefinition,
+      isExternalModule: file.isExternalModule
+    })),
+    projectStructure,
+    instructions: `
+      Analyze the task and suggest tools to find relevant files. Include previously found files in your response.
+      Pay special attention to:
+      - Class relationships and type definitions
+      - External module imports and their type definitions
+      - Inheritance hierarchy and composition of classes
 
-async function findAndReadFile(fileName: string, workingDir: string): Promise<FileInfo | null> {
-  // List of Node.js built-in modules
-  const builtinModules = ['fs', 'path', 'child_process', 'http', 'https', 'url', 'util', 'events', 'stream', 'crypto'];
+      Important guidelines:
+      1. Identify and include type definition files (.d.ts) for external modules.
+      2. For each import statement found (e.g., 'import WebSocket from 'ws';'), use the findExternalDependency tool to locate its type definitions.
+      3. Assign relevance scores (1-10) to all files, including type definitions.
+      4. Sort the relevantFiles list by relevance score in descending order.
+      5. Provide reasoning for each file's inclusion and its relevance score.
+      6. Focus on files directly relevant to the task, including necessary type definitions from node_modules.
 
-  if (builtinModules.includes(fileName.replace('.ts', ''))) {
-    console.log(`${fileName} is a built-in Node.js module and doesn't exist as a separate file.`);
-    return {
-      name: fileName,
-      content: `// This is a built-in Node.js module`,
-      size: 0
-    };
-  }
-
-  const ignoreDirs = ['node_modules', '.git', 'dist', 'build'];
-  
-  async function searchDir(dir: string): Promise<string | null> {
-    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-    
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      
-      if (entry.isDirectory()) {
-        if (!ignoreDirs.includes(entry.name)) {
-          const found = await searchDir(fullPath);
-          if (found) return found;
-        }
-      } else if (entry.isFile() && entry.name === path.basename(fileName)) {
-        return fullPath;
+      Your response MUST be a valid JSON object with the following structure: 
+      { 
+        allFilesFound: boolean, 
+        tools: Array<{ name: string, params: object }>, 
+        relevantFiles: Array<{ name: string, score: number }>, 
+        reasoning: "file1 (Score: 9): reason1\nfile2 (Score: 8): reason2\nfile3 (Score: 3): reason3"
       }
-    }
-    
-    return null;
-  }
-
-  const filePath = await searchDir(workingDir);
-  
-  if (filePath) {
-    const stats = await fs.promises.stat(filePath);
-    const content = await fs.promises.readFile(filePath, 'utf-8');
-    return {
-      name: path.relative(workingDir, filePath),
-      content,
-      size: stats.size
-    };
-  }
-
-  console.log(`File not found: ${fileName}`);
-  return null;
+    `,
+    availableTools: [
+      { name: "findFilesByName", description: "Find files with a specific name or pattern" },
+      { name: "findFilesByContent", description: "Find files containing specific text or pattern" },
+      { name: "findImportedFiles", description: "Find files imported by other files (TypeScript/JavaScript/JSX)" },
+      { name: "findRelatedTests", description: "Find related test files for a given file" },
+      { name: "findComponentUsage", description: "Find files where a specific component is used" },
+      { name: "findAPIUsage", description: "Find files that use a specific API endpoint" },
+      { name: "findStyleDependencies", description: "Find style files (CSS, SCSS) related to a component" },
+      { name: "findFunctionDefinition", description: "Find the file where a specific function is defined" },
+      { name: "findDependencies", description: "Find dependencies of a specific file" },
+      { name: "findRecentlyModifiedFiles", description: "Find files that were recently modified" },
+      { name: "findRelatedClasses", description: "Find related classes and files that are imported or extended by a given file" },
+      { name: "findExternalDependency", description: "Find type definitions for external module imports" }
+    ]
+  };
 }
-
-  async function callLLM(task: string, relevantFiles: FileInfo[], projectStructure: string): Promise<LLMResponse> {
-    const prompt = constructPrompt(task, relevantFiles, projectStructure);
-    const response = await sendPromptToLLM(prompt);
-    return parseLLMResponse(response);
-  }
-  
-
-  function constructPrompt(task: string, relevantFiles: FileInfo[], projectStructure: string): Record<string, any> {
-    return {
-      task,
-      relevantFiles: relevantFiles.map(file => ({
-        name: file.name,
-        content: file.content.substring(0, 2000) // Limit content to first 1000 characters
-      })),
-      projectStructure,
-      instructions: `
-        Analyze the task and suggest tools to find relevant files. Include previously found files in your response.
-        Pay special attention to class relationships:
-        - For any TypeScript (.ts) files found, use the findRelatedClasses tool to identify base classes, imported classes, and any classes that extend from them.
-        - Consider the inheritance hierarchy and composition of classes when determining relevance.
-        
-        Important:
-        - Include in your relevantFiles list any files that you believe might be relevant, even if they haven't been confirmed to exist yet.
-        - Assign a relevance score to each file on a scale of 1 to 10, where 10 is the highest relevance to the task. Include this score in your relevantFiles list.
-        - Sort the relevantFiles list by relevance score in descending order.
-        - Ignore files that are provided by node.js (e.g., fs, path, http, etc.) as they are built-in modules.
-        - Ignore files in the node_modules directory, as they are dependencies.
-        - Ignore files that are not in the project directory.
-        
-        If all necessary files are found, indicate so. Provide detailed reasoning for your choices, explaining why each file or class is relevant to the task and justify the relevance score you've assigned. 
-        Your response MUST be a valid JSON object with the following structure: 
-        { 
-          allFilesFound: boolean, 
-          tools: Array<{ name: string, params: object }>, 
-          relevantFiles: Array<{ name: string, score: number }>, 
-          reasoning: "file1 (Score: 9): reason1\nfile2 (Score: 8): reason2\nfile3 (Score: 3): reason3"
-        }
-      `,
-      availableTools: [
-        { name: "findFilesByName", description: "Find files with a specific name or pattern" },
-        { name: "findFilesByContent", description: "Find files containing specific text or pattern" },
-        { name: "findImportedFiles", description: "Find files imported by other files (TypeScript/JavaScript/JSX)" },
-        { name: "findRelatedTests", description: "Find related test files for a given file" },
-        { name: "findComponentUsage", description: "Find files where a specific component is used" },
-        { name: "findAPIUsage", description: "Find files that use a specific API endpoint" },
-        { name: "findStyleDependencies", description: "Find style files (CSS, SCSS) related to a component" },
-        { name: "findFunctionDefinition", description: "Find the file where a specific function is defined" },
-        { name: "findDependencies", description: "Find dependencies of a specific file" },
-        { name: "findRecentlyModifiedFiles", description: "Find files that were recently modified" },
-        { name: "findRelatedClasses", description: "Find related classes and files that are imported or extended by a given file" }
-      ]
-    };
-  }
 
 async function sendPromptToLLM(prompt: Record<string, any>): Promise<string> {
-  //console.log('Sending prompt to LLM:', JSON.stringify(prompt, null, 2));
-
   return getCompletion(JSON.stringify(prompt));
 }
-
 
 async function getCompletion(prompt: string, model: 'gpt-4o' | 'gemini' = 'gpt-4o'): Promise<string> {
   try {
@@ -293,13 +291,11 @@ async function getCompletion(prompt: string, model: 'gpt-4o' | 'gemini' = 'gpt-4
       taskDescription: '',
       model
     });
-    
+
     if (!response) {
       console.log(`Failed to get response from the LLM - prompt size ${prompt.length}`);
       throw new Error('Failed to get response from the LLM');
     }
-    
-    //console.log('LLM response:', response);
 
     return response;
   } catch (error) {
@@ -311,17 +307,15 @@ async function getCompletion(prompt: string, model: 'gpt-4o' | 'gemini' = 'gpt-4
 
 function parseLLMResponse(response: string): LLMResponse {
   try {
-    // First, try to parse the response as-is
     return JSON.parse(response);
   } catch (error) {
     console.warn('Failed to parse LLM response as JSON. Attempting to clean the response.');
 
     try {
-      // Remove any line breaks from the reasoning field
       const cleanedResponse = response.replace(/"reasoning": "(.*?)"/gs, (match, p1) => {
         return `"reasoning": "${p1.replace(/\n/g, ' ').replace(/"/g, '\\"')}"`;
       });
-      
+
       return JSON.parse(cleanedResponse);
     } catch (cleanError) {
       console.error('Failed to clean and parse LLM response:', cleanError);
@@ -332,52 +326,60 @@ function parseLLMResponse(response: string): LLMResponse {
 
 async function executeTool(tool: Tool, workingDir: string): Promise<FileInfo[]> {
   try {
-    const fileNames = await executeToolForFileNames(tool, workingDir);
-    const fileInfos: FileInfo[] = [];
-    for (const fileName of fileNames) {
-      try {
-        const fileInfo = await findAndReadFile(path.basename(fileName), workingDir);
-        if (fileInfo) {
-          fileInfos.push(fileInfo);
-        }
-      } catch (error) {
-        console.error(`Error processing file ${fileName}:`, error instanceof Error ? error.message : String(error));
-      }
-    }
-    return fileInfos;
+    return await executeToolForFileNames(tool, workingDir);
   } catch (error) {
     console.error(`Error executing tool ${tool.name}:`, error instanceof Error ? error.message : String(error));
     return [];
   }
 }
 
-async function executeToolForFileNames(tool: Tool, workingDir: string): Promise<string[]> {
+async function executeToolForFileNames(tool: Tool, workingDir: string): Promise<FileInfo[]> {
+  logger.logMainFlow(`executeToolForFileNames called with tool: ${JSON.stringify(tool)}, workingDir: ${workingDir}`);
+
   switch (tool.name) {
     case "findFilesByName":
-      return findFilesByName(tool.params.pattern, workingDir);
+      const files = await findFilesByName(tool.params.pattern, workingDir);
+      return files.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findFilesByContent":
-      return findFilesByContent(tool.params.pattern, workingDir);
+      const contentFiles = await findFilesByContent(tool.params.pattern, workingDir);
+      return contentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findImportedFiles":
-      return findImportedFiles(path.join(workingDir, tool.params.file), workingDir);
+      const importedFiles = await findImportedFiles(path.join(workingDir, tool.params.file), workingDir);
+      return importedFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findRelatedTests":
-      return findRelatedTests(path.join(workingDir, tool.params.file), workingDir);
+      const testFiles = await findRelatedTests(path.join(workingDir, tool.params.file), workingDir);
+      return testFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findComponentUsage":
-      return findComponentUsage(tool.params.component, workingDir);
+      const usageFiles = await findComponentUsage(tool.params.component, workingDir);
+      return usageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findAPIUsage":
-      return findAPIUsage(tool.params.endpoint, workingDir);
+      const apiUsageFiles = await findAPIUsage(tool.params.endpoint, workingDir);
+      return apiUsageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findStyleDependencies":
-      return findStyleDependencies(tool.params.component, workingDir);
+      const styleFiles = await findStyleDependencies(tool.params.component, workingDir);
+      return styleFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findFunctionDefinition":
-      return findFunctionDefinition(tool.params.functionName, workingDir);
+      const functionFiles = await findFunctionDefinition(tool.params.functionName, workingDir);
+      return functionFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findDependencies":
-      return findDependencies(path.join(workingDir, tool.params.file), workingDir);
+      const dependencyFiles = await findDependencies(path.join(workingDir, tool.params.file), workingDir);
+      return dependencyFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findRecentlyModifiedFiles":
-      return findRecentlyModifiedFiles(tool.params.days, workingDir);
+      const recentFiles = await findRecentlyModifiedFiles(tool.params.days, workingDir);
+      return recentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
     case "findRelatedClasses":
-      return findRelatedClasses(tool.params.file, workingDir);
+      const relatedClassFiles = await findRelatedClasses(tool.params.file, workingDir);
+      return relatedClassFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
+      case "findExternalDependency":
+      if (!tool.params.module) {  // Changed from tool.params.moduleName to tool.params.module
+        logger.logToolStderr("Module name is undefined for findExternalDependency");
+        return [];
+      }
+      logger.logMainFlow(`Calling findExternalDependency with module: ${tool.params.module}`);
+      return findExternalDependency(tool.params.module, workingDir);  // Changed from tool.params.moduleName to tool.params.module
     default:
       throw new Error(`Unknown tool: ${tool.name}`);
   }
 }
 
-export { selectRelevantFiles };
+export { selectRelevantFiles, getProjectStructure };

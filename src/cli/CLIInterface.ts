@@ -13,9 +13,9 @@ export class CLIInterface {
 
   async askQuestion(question: string): Promise<string> {
     return new Promise((resolve) => {
-      logger.logMainFlow(`CLI asking: ${question}`);
+      //logger.logMainFlow(`CLI asking: ${question}`);
       this.rl.question(`${question} `, (answer) => {
-        logger.logMainFlow(`CLI received answer: ${answer}`);
+        //logger.logMainFlow(`CLI received answer: ${answer}`);
         resolve(answer);
       });
     });

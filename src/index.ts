@@ -15,7 +15,7 @@ import * as fs from 'fs';
 async function main() {
   const cli = new CLIInterface();
 
-  const defaultProjectRoot = '/Users/shayco/GitHub/temp';
+  const defaultProjectRoot = '/Users/shayco/GitHub/temp/netmock-js';
   const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
   const projectRoot = projectRootInput.trim() || defaultProjectRoot;
 

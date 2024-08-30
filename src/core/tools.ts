@@ -4,7 +4,6 @@ import { promisify } from 'util';
 import globOriginal from 'glob';
 import { logger } from './initLogger';
 
-
 const glob = promisify(globOriginal);
 
 function shouldIgnoreFile(filePath: string): boolean {
@@ -181,4 +180,19 @@ export async function findRelatedClasses(file: string, workingDir: string): Prom
     logger.logToolStderr(`Error in findRelatedClasses for file ${file}: ${error instanceof Error ? error.message : String(error)}`);
     return [];
   }
+}
+
+export async function findExternalDependency(moduleName: string, workingDir: string): Promise<string[]> {
+  const possiblePaths = [
+    path.join(workingDir, 'node_modules', moduleName, 'index.d.ts'),
+    path.join(workingDir, 'node_modules', '@types', moduleName, 'index.d.ts'),
+    path.join(workingDir, 'node_modules', moduleName, 'dist', 'index.d.ts'),
+    path.join(workingDir, 'node_modules', moduleName, 'lib', 'index.d.ts')
+  ];
+
+  const existingPaths = await Promise.all(
+    possiblePaths.map(async (p) => (await fs.promises.stat(p).then(() => true).catch(() => false)) ? p : null)
+  );
+
+  return existingPaths.filter((p): p is string => p !== null).map(p => path.relative(workingDir, p));
 }

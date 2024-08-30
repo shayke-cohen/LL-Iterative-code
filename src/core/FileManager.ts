@@ -34,7 +34,12 @@ class FileManager {
       const dirPath = path.dirname(filePath);
       fs.mkdirSync(dirPath, { recursive: true });
 
-      fs.writeFileSync(filePath, file.contentSnippet);
+      // Convert the content to a string if it's not already
+      const content = typeof file.contentSnippet === 'string' 
+        ? file.contentSnippet 
+        : JSON.stringify(file.contentSnippet, null, 2);
+
+      fs.writeFileSync(filePath, content);
       this.logger.logMainFlow(`Updated file ${file.fileName}`);
       return true;
     } catch (error) {
