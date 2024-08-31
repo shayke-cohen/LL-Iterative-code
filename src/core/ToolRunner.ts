@@ -15,10 +15,10 @@ export class ToolRunner {
   private static projectRoot: string;
   private static logger: Logger;
 
-  static initialize(projectRoot: string): void {
+  static initialize(projectRoot: string, logger?: Logger): void {
     this.fileManager = new FileManager(projectRoot);
     this.projectRoot = projectRoot;
-    this.logger = Logger.getInstance();
+    this.logger = logger || Logger.getInstance();
   }
 
   static async runCommand(command: string): Promise<ToolResult> {

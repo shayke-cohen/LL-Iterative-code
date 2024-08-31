@@ -1,89 +1,70 @@
 import { main } from '../src/index';
-import { getProjectStructure, selectRelevantFiles } from '../src/core/file-selector';
-import { ToolUsage, LLMResponse } from '../src/core/LLMInterface';
-import { RealLLM } from '../src/core/RealLLM';
-import { ToolRunner } from '../src/core/ToolRunner';
 import { CLIInterface } from '../src/cli/CLIInterface';
+import { Shraga } from '../src/Shraga';
+import { Logger } from '../src/core/Logger';
 
-jest.mock('../src/core/file-selector');
-jest.mock('../src/core/RealLLM');
-jest.mock('../src/core/ToolRunner');
 jest.mock('../src/cli/CLIInterface');
+jest.mock('../src/Shraga');
+jest.mock('../src/core/Logger');
 
 describe('main function', () => {
-  it('should execute the main process', async () => {
-    // Mock getProjectStructure
-    (getProjectStructure as jest.Mock).mockResolvedValue('mocked project structure');
+  let mockCLI: jest.Mocked<CLIInterface>;
+  let mockShraga: jest.Mocked<Shraga>;
+  let mockLogger: jest.Mocked<Logger>;
 
-    // Mock selectRelevantFiles
-    (selectRelevantFiles as jest.Mock).mockResolvedValue([
-      { name: 'file1.ts', content: 'content1' },
-      { name: 'file2.ts', content: 'content2' },
-    ]);
-
-    // Mock CLIInterface
-    const mockCLI = {
-      askQuestion: jest.fn().mockResolvedValue(''),
+  beforeEach(() => {
+    mockCLI = {
+      askQuestion: jest.fn(),
       close: jest.fn(),
-    };
+    } as unknown as jest.Mocked<CLIInterface>;
+
+    mockShraga = {
+      run: jest.fn(),
+    } as unknown as jest.Mocked<Shraga>;
+
+    mockLogger = {
+      logMainFlow: jest.fn(),
+      logToolStderr: jest.fn(),
+    } as unknown as jest.Mocked<Logger>;
+
     (CLIInterface as jest.Mock).mockImplementation(() => mockCLI);
+    (Shraga as unknown as jest.Mock).mockImplementation(() => mockShraga);
+    (Logger.getInstance as jest.Mock).mockReturnValue(mockLogger);
+  });
 
-    // Mock RealLLM
-    const mockLLM = {
-      generateCode: jest.fn(),
-      analyzeResults: jest.fn(),
-    };
-    (RealLLM as jest.Mock).mockImplementation(() => mockLLM);
+  test('should run Shraga with user input', async () => {
+    mockCLI.askQuestion.mockResolvedValueOnce('/test/project')
+      .mockResolvedValueOnce('Test task');
 
-    // Mock ToolRunner
-    (ToolRunner.runTools as jest.Mock).mockResolvedValue({
-      results: {},
-      newFiles: [],
-      modifiedFiles: [],
-      updatedFileHistory: [],
-    });
-    (ToolRunner.runStandardTools as jest.Mock).mockResolvedValue({});
+    await main(mockLogger);
 
-    // Mock LLM responses
-    const mockToolUsage: ToolUsage = {
-      name: 'updateFile',
-      params: { fileName: 'file1.ts', content: 'updated content' },
-      reasoning: 'Update file content'
-    };
-
-    const mockGenerateCodeResponse: LLMResponse = {
-      toolUsages: [mockToolUsage],
-      questions: [],
-      isTaskComplete: false,
-      actionsSummary: 'Generated code',
-      relevantFiles: ['file1.ts'],
-      filesHistory: []
-    };
-
-    const mockAnalyzeResultsResponse: LLMResponse = {
-      toolUsages: [],
-      questions: [],
-      isTaskComplete: true,
-      completionReason: 'Task completed successfully',
-      actionsSummary: 'Updated file1.ts',
-      relevantFiles: ['file1.ts'],
-      filesHistory: []
-    };
-
-    mockLLM.generateCode.mockResolvedValue(mockGenerateCodeResponse);
-    mockLLM.analyzeResults.mockResolvedValue(mockAnalyzeResultsResponse);
-
-    // Execute main function
-    await main();
-
-    // Add your assertions here
-    expect(getProjectStructure).toHaveBeenCalled();
-    expect(selectRelevantFiles).toHaveBeenCalled();
-    expect(mockCLI.askQuestion).toHaveBeenCalled();
-    expect(mockLLM.generateCode).toHaveBeenCalled();
-    expect(mockLLM.analyzeResults).toHaveBeenCalled();
-    expect(ToolRunner.runTools).toHaveBeenCalled();
-    expect(ToolRunner.runStandardTools).toHaveBeenCalled();
+    expect(mockCLI.askQuestion).toHaveBeenCalledTimes(2);
+    expect(Shraga).toHaveBeenCalledWith('/test/project', 'Test task', expect.objectContaining({ logger: mockLogger }));
+    expect(mockShraga.run).toHaveBeenCalled();
     expect(mockCLI.close).toHaveBeenCalled();
+  });
+
+  test('should use default values if user input is empty', async () => {
+    mockCLI.askQuestion.mockResolvedValueOnce('')
+      .mockResolvedValueOnce('');
+
+    await main(mockLogger);
+
+    expect(Shraga).toHaveBeenCalledWith(
+      '/Users/shayco/GitHub/temp-playground',
+      'add performance log for every function',
+      expect.objectContaining({ logger: mockLogger })
+    );
+  });
+
+  test('should handle errors', async () => {
+    const errorMessage = 'Test error';
+    mockCLI.askQuestion.mockResolvedValueOnce('/test/project')
+      .mockResolvedValueOnce('Test task');
+    mockShraga.run.mockRejectedValue(new Error(errorMessage));
+
+    await main(mockLogger);
+
+    expect(mockLogger.logToolStderr).toHaveBeenCalledWith(expect.stringContaining(errorMessage));
   });
 });

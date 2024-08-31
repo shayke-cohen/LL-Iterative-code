@@ -10,13 +10,14 @@ export class Logger {
   private config: LogConfig;
   private logFile: string;
 
-  private constructor(config: LogConfig, projectRoot: string) {
+  constructor(config: LogConfig, projectRoot: string) {
     this.config = config;
-    this.logFile = path.join(process.cwd(), 'app.log');
+    this.logFile = path.join(projectRoot, 'app.log');
   }
 
-  static initialize(config: LogConfig, projectRoot: string): void {
+  static initialize(config: LogConfig, projectRoot: string): Logger {
     Logger.instance = new Logger(config, projectRoot);
+    return Logger.instance;
   }
 
   static getInstance(): Logger {
