@@ -32,12 +32,12 @@ async function readFilesFromDisk(fileNames: string[], projectRoot: string): Prom
   }));
 }
 
-async function main() {
+export async function main() {
   const cli = new CLIInterface();
 
   try {
     // Get project directory from user
-    const defaultProjectRoot = '/Users/shayco/GitHub/temp-playground';//process.cwd();
+    const defaultProjectRoot = '/Users/shayco/GitHub/temp-playground';
     const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
     const projectRoot = projectRootInput.trim() || defaultProjectRoot;
     const absoluteProjectRoot = path.resolve(projectRoot);
@@ -118,7 +118,6 @@ async function main() {
           const answer = await cli.askQuestion(question);
           // You might want to store these answers and pass them to the LLM in the next iteration
         }
-        //continue;
       }
 
       // Analysis Phase

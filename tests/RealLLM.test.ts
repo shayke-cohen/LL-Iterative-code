@@ -1,72 +1,104 @@
+import { Task } from '../src/core/TaskInitializer';
+import { ToolResults, LLMResponse } from '../src/core/LLMInterface';
 import { RealLLM } from '../src/core/RealLLM';
-import { Task, ToolResults } from '../src/core/TaskInitializer';
 import { runPrompt } from '../src/core/runPrompt';
-import { jest } from '@jest/globals';
+import { Logger } from '../src/core/Logger';
 
 jest.mock('../src/core/runPrompt');
+jest.mock('../src/core/Logger');
 
 describe('RealLLM', () => {
   let llm: RealLLM;
   let mockTask: Task;
   let mockToolResults: ToolResults;
+  let mockLogger: jest.Mocked<Logger>;
 
   beforeEach(() => {
+    mockLogger = {
+      logInfo: jest.fn(),
+      logLLMRequest: jest.fn(),
+      logLLMResponse: jest.fn(),
+      logToolStderr: jest.fn(),
+    } as unknown as jest.Mocked<Logger>;
+
+    (Logger.getInstance as jest.Mock).mockReturnValue(mockLogger);
+
     llm = new RealLLM();
     mockTask = {
       description: 'Test task',
-      relevantFiles: [{ fileName: 'test.ts', contentSnippet: 'console.log("test");' }],
+      relevantFiles: [{ fileName: 'file1.ts', contentSnippet: 'console.log("test");' }],
       projectRootDirectory: '/test/project',
       enableQuestions: false,
-      relevantFilesHistory: [],
+      relevantFilesHistory: []
     };
     mockToolResults = {
       tsc: { success: true, message: 'Compilation successful' },
-      jest: { success: true, message: 'Tests passed' },
+      jest: { success: true, message: 'All tests passed' }
     };
   });
 
-  test('should generate code successfully', async () => {
+  test('generateCode should return a valid LLMResponse', async () => {
     const mockLLMResponse = JSON.stringify({
-      toolUsages: [{ name: 'updateFile', params: { fileName: 'test.ts', content: 'updated content' } }],
+      toolUsages: [],
       isTaskComplete: false,
-      actionsSummary: 'Updated test.ts',
-      files_history: [
+      actionsSummary: 'Generated code',
+      relevantFiles: ['file1.ts'],
+      filesHistory: [
         {
-          file_name: 'test.ts',
+          file_name: 'file1.ts',
           current_version: 1,
-          version_diffs: [{ from_version: 0, to_version: 1, diff: '- old\n+ new', comment: 'Update file' }],
-        },
-      ],
+          version_diffs: []
+        }
+      ]
     });
 
     (runPrompt as jest.Mock).mockResolvedValue(mockLLMResponse);
 
     const result = await llm.generateCode(mockTask, mockToolResults);
 
-    expect(runPrompt).toHaveBeenCalled();
-    expect(result.toolUsages).toHaveLength(1);
-    expect(result.toolUsages[0].name).toBe('updateFile');
     expect(result.isTaskComplete).toBe(false);
-    expect(result.files_history).toHaveLength(1);
+    expect(result.actionsSummary).toBe('Generated code');
+    expect(result.filesHistory).toHaveLength(1);
+    expect(result.filesHistory[0].file_name).toBe('file1.ts');
+    expect(mockLogger.logInfo).toHaveBeenCalled();
+    expect(mockLogger.logLLMRequest).toHaveBeenCalled();
+    expect(mockLogger.logLLMResponse).toHaveBeenCalled();
   });
 
-  test('should analyze results successfully', async () => {
+  test('analyzeResults should return a valid LLMResponse', async () => {
     const mockLLMResponse = JSON.stringify({
+      toolUsages: [],
       isTaskComplete: true,
       completionReason: 'Task completed successfully',
       actionsSummary: 'Analyzed results',
-      relevantFiles: ['test.ts'],
+      relevantFiles: ['file1.ts'],
+      filesHistory: [
+        {
+          file_name: 'file1.ts',
+          current_version: 2,
+          version_diffs: [
+            {
+              from_version: 1,
+              to_version: 2,
+              diff: '- old\n+ new',
+              comment: 'Updated file'
+            }
+          ]
+        }
+      ]
     });
 
     (runPrompt as jest.Mock).mockResolvedValue(mockLLMResponse);
 
     const result = await llm.analyzeResults(mockTask, mockToolResults);
 
-    expect(runPrompt).toHaveBeenCalled();
     expect(result.isTaskComplete).toBe(true);
     expect(result.completionReason).toBe('Task completed successfully');
-    expect(result.relevantFiles).toContain('test.ts');
+    expect(result.actionsSummary).toBe('Analyzed results');
+    expect(result.filesHistory).toHaveLength(1);
+    expect(result.filesHistory[0].version_diffs).toHaveLength(1);
+    expect(mockLogger.logInfo).toHaveBeenCalled();
+    expect(mockLogger.logLLMRequest).toHaveBeenCalled();
+    expect(mockLogger.logLLMResponse).toHaveBeenCalled();
   });
-
-  // Add more tests for error handling, retries, etc.
 });

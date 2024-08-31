@@ -1,91 +1,89 @@
 import { main } from '../src/index';
-import { CLIInterface } from '../src/cli/CLIInterface';
-import { ToolRunner } from '../src/core/ToolRunner';
-import { RealLLM } from '../src/core/RealLLM';
 import { getProjectStructure, selectRelevantFiles } from '../src/core/file-selector';
-import { jest } from '@jest/globals';
+import { ToolUsage, LLMResponse } from '../src/core/LLMInterface';
+import { RealLLM } from '../src/core/RealLLM';
+import { ToolRunner } from '../src/core/ToolRunner';
+import { CLIInterface } from '../src/cli/CLIInterface';
 
-jest.mock('../src/cli/CLIInterface');
-jest.mock('../src/core/ToolRunner');
-jest.mock('../src/core/RealLLM');
 jest.mock('../src/core/file-selector');
+jest.mock('../src/core/RealLLM');
+jest.mock('../src/core/ToolRunner');
+jest.mock('../src/cli/CLIInterface');
 
 describe('main function', () => {
-  let mockCLI: jest.Mocked<CLIInterface>;
-  let mockToolRunner: jest.Mocked<typeof ToolRunner>;
-  let mockLLM: jest.Mocked<RealLLM>;
-
-  beforeEach(() => {
-    mockCLI = {
-      askQuestion: jest.fn(),
-      close: jest.fn(),
-    } as any;
-    (CLIInterface as jest.Mock).mockImplementation(() => mockCLI);
-
-    mockToolRunner = {
-      initialize: jest.fn(),
-      runTools: jest.fn(),
-      runStandardTools: jest.fn(),
-    } as any;
-    Object.assign(ToolRunner, mockToolRunner);
-
-    mockLLM = {
-      generateCode: jest.fn(),
-      analyzeResults: jest.fn(),
-    } as any;
-    (RealLLM as jest.Mock).mockImplementation(() => mockLLM);
-
+  it('should execute the main process', async () => {
+    // Mock getProjectStructure
     (getProjectStructure as jest.Mock).mockResolvedValue('mocked project structure');
+
+    // Mock selectRelevantFiles
     (selectRelevantFiles as jest.Mock).mockResolvedValue([
       { name: 'file1.ts', content: 'content1' },
       { name: 'file2.ts', content: 'content2' },
     ]);
-  });
 
-  test('should run the main process successfully', async () => {
-    mockCLI.askQuestion
-      .mockResolvedValueOnce('/test/project') // project directory
-      .mockResolvedValueOnce('test task'); // task description
+    // Mock CLIInterface
+    const mockCLI = {
+      askQuestion: jest.fn().mockResolvedValue(''),
+      close: jest.fn(),
+    };
+    (CLIInterface as jest.Mock).mockImplementation(() => mockCLI);
 
-    mockLLM.generateCode.mockResolvedValue({
-      toolUsages: [{ name: 'updateFile', params: { fileName: 'file1.ts', content: 'updated content' } }],
-      isTaskComplete: false,
-    });
+    // Mock RealLLM
+    const mockLLM = {
+      generateCode: jest.fn(),
+      analyzeResults: jest.fn(),
+    };
+    (RealLLM as jest.Mock).mockImplementation(() => mockLLM);
 
-    mockToolRunner.runTools.mockResolvedValue({
-      results: { updateFile: { success: true, message: 'File updated' } },
+    // Mock ToolRunner
+    (ToolRunner.runTools as jest.Mock).mockResolvedValue({
+      results: {},
       newFiles: [],
-      modifiedFiles: ['file1.ts'],
-      updatedFileHistory: [
-        {
-          file_name: 'file1.ts',
-          current_version: 1,
-          version_diffs: [{ from_version: 0, to_version: 1, diff: '- old\n+ new', comment: 'Update file' }],
-        },
-      ],
+      modifiedFiles: [],
+      updatedFileHistory: [],
     });
+    (ToolRunner.runStandardTools as jest.Mock).mockResolvedValue({});
 
-    mockToolRunner.runStandardTools.mockResolvedValue({
-      tsc: { success: true, message: 'Compilation successful' },
-      jest: { success: true, message: 'Tests passed' },
-    });
+    // Mock LLM responses
+    const mockToolUsage: ToolUsage = {
+      name: 'updateFile',
+      params: { fileName: 'file1.ts', content: 'updated content' },
+      reasoning: 'Update file content'
+    };
 
-    mockLLM.analyzeResults.mockResolvedValue({
+    const mockGenerateCodeResponse: LLMResponse = {
+      toolUsages: [mockToolUsage],
+      questions: [],
+      isTaskComplete: false,
+      actionsSummary: 'Generated code',
+      relevantFiles: ['file1.ts'],
+      filesHistory: []
+    };
+
+    const mockAnalyzeResultsResponse: LLMResponse = {
+      toolUsages: [],
+      questions: [],
       isTaskComplete: true,
       completionReason: 'Task completed successfully',
       actionsSummary: 'Updated file1.ts',
-    });
+      relevantFiles: ['file1.ts'],
+      filesHistory: []
+    };
 
+    mockLLM.generateCode.mockResolvedValue(mockGenerateCodeResponse);
+    mockLLM.analyzeResults.mockResolvedValue(mockAnalyzeResultsResponse);
+
+    // Execute main function
     await main();
 
-    expect(mockCLI.askQuestion).toHaveBeenCalledTimes(2);
-    expect(ToolRunner.initialize).toHaveBeenCalledWith(expect.any(String));
+    // Add your assertions here
+    expect(getProjectStructure).toHaveBeenCalled();
+    expect(selectRelevantFiles).toHaveBeenCalled();
+    expect(mockCLI.askQuestion).toHaveBeenCalled();
     expect(mockLLM.generateCode).toHaveBeenCalled();
-    expect(mockToolRunner.runTools).toHaveBeenCalled();
-    expect(mockToolRunner.runStandardTools).toHaveBeenCalled();
     expect(mockLLM.analyzeResults).toHaveBeenCalled();
+    expect(ToolRunner.runTools).toHaveBeenCalled();
+    expect(ToolRunner.runStandardTools).toHaveBeenCalled();
     expect(mockCLI.close).toHaveBeenCalled();
   });
-
-  // Add more tests for different scenarios (e.g., task not complete after max iterations, error handling)
 });

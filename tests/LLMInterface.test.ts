@@ -2,17 +2,25 @@ import { LLMInterface, LLMResponse, ToolResults } from '../src/core/LLMInterface
 import { Task } from '../src/core/TaskInitializer';
 
 class TestLLM extends LLMInterface {
-  async generateCode(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse> {
+  async generateCode(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return {
-      updatedFiles: [{ fileName: 'test.ts', contentSnippet: 'console.log("generated");' }],
-      toolUsages: [{ name: 'updateFile', params: { fileName: 'test.ts', content: 'console.log("generated");' }, reasoning: 'Generate new code' }],
+      toolUsages: [{ name: 'updateFile', params: { fileName: 'test.ts', content: 'console.log("generated");' }, reasoning: 'Update file' }],
+      questions: [],
+      isTaskComplete: false,
+      actionsSummary: 'Generated code',
+      relevantFiles: ['test.ts'],
+      filesHistory: []
     };
   }
 
-  async analyzeResults(task: Task, toolResults: ToolResults, history: string[]): Promise<LLMResponse> {
+  async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return {
-      updatedFiles: [],
-      toolUsages: [{ name: 'yarnTest', params: {}, reasoning: 'Run tests' }],
+      toolUsages: [],
+      questions: [],
+      isTaskComplete: false,
+      actionsSummary: 'Analyzed results',
+      relevantFiles: ['test.ts'],
+      filesHistory: []
     };
   }
 }
@@ -26,24 +34,24 @@ describe('LLMInterface', () => {
     task = {
       description: 'Test task',
       relevantFiles: [],
-      workingFiles: [],
       projectRootDirectory: '/test',
       enableQuestions: false,
+      relevantFilesHistory: []
     };
   });
 
   test('should generate code', async () => {
-    const result = await llm.generateCode(task, {}, []);
-    expect(result.updatedFiles).toHaveLength(1);
-    expect(result.updatedFiles[0].fileName).toBe('test.ts');
+    const result = await llm.generateCode(task, {});
     expect(result.toolUsages).toHaveLength(1);
     expect(result.toolUsages[0].name).toBe('updateFile');
+    expect(result.isTaskComplete).toBe(false);
+    expect(result.actionsSummary).toBe('Generated code');
   });
 
   test('should analyze results', async () => {
-    const result = await llm.analyzeResults(task, {}, []);
-    expect(result.updatedFiles).toHaveLength(0);
-    expect(result.toolUsages).toHaveLength(1);
-    expect(result.toolUsages[0].name).toBe('yarnTest');
+    const result = await llm.analyzeResults(task, {});
+    expect(result.toolUsages).toHaveLength(0);
+    expect(result.isTaskComplete).toBe(false);
+    expect(result.actionsSummary).toBe('Analyzed results');
   });
 });
