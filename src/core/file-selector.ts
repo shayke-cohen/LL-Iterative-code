@@ -141,13 +141,22 @@ const EXCLUDED_FILES = [
   'dist',
   'build',
   '.vscode',
-  '.idea'
+  '.idea',
+  '.cache',
+  '*.log'
 ];
 
 function shouldExcludeFile(filePath: string): boolean {
   const fileName = path.basename(filePath);
-  return EXCLUDED_FILES.includes(fileName) || filePath.includes('node_modules');
+  return EXCLUDED_FILES.some(pattern => {
+    if (pattern.startsWith('*')) {
+      // Handle wildcard patterns
+      return fileName.endsWith(pattern.slice(1));
+    }
+    return fileName === pattern || filePath.includes(pattern);
+  }) || filePath.includes('node_modules');
 }
+
 
 async function selectRelevantFiles(
   task: string, 
@@ -166,7 +175,7 @@ async function selectRelevantFiles(
     const llmResponse = await callLLM(task, relevantFiles, projectStructure);
 
     logger.logMainFlow(`Iteration ${iteration + 1} all files found: ${llmResponse.allFilesFound}`);
-    logger.logMainFlow(`Iteration ${iteration + 1} reasoning:\n${llmResponse.reasoning}`);
+    //logger.logMainFlow(`Iteration ${iteration + 1} reasoning:\n${llmResponse.reasoning}`);
     logger.logMainFlow(`Iteration ${iteration + 1} relevant files:\n${JSON.stringify(llmResponse.relevantFiles, null, 2)}`);
 
     // Process tool usages
@@ -323,21 +332,63 @@ async function getCompletion(prompt: string, model: 'gpt-4o' | 'gemini' = 'gpt-4
 
 function parseLLMResponse(response: string): LLMResponse {
   try {
+    // First, try to parse the entire response as JSON
     return JSON.parse(response);
   } catch (error) {
-    console.warn('Failed to parse LLM response as JSON. Attempting to clean the response.');
-
-    try {
-      const cleanedResponse = response.replace(/"reasoning": "(.*?)"/gs, (match, p1) => {
-        return `"reasoning": "${p1.replace(/\n/g, ' ').replace(/"/g, '\\"')}"`;
-      });
-
-      return JSON.parse(cleanedResponse);
-    } catch (cleanError) {
-      console.error('Failed to clean and parse LLM response:', cleanError);
-      throw new Error('Invalid JSON response from LLM after cleaning attempt');
+    logger.logToolStderr('Failed to parse LLM response as JSON. Attempting to extract JSON.');
+    
+    // Try to extract JSON from the response
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const extractedJson = jsonMatch[0];
+        logger.logMainFlow('Extracted JSON from response.');
+        return JSON.parse(extractedJson);
+      } catch (innerError) {
+        logger.logToolStderr('Failed to parse extracted JSON. Attempting to clean and parse.');
+        
+        // If parsing fails, try to clean the JSON string
+        const cleanedJson = cleanJSONString(jsonMatch[0]);
+        try {
+          return JSON.parse(cleanedJson);
+        } catch (cleanError) {
+          logger.logToolStderr('Failed to parse cleaned JSON. Returning default response.');
+          // If all parsing attempts fail, return a default response
+          return {
+            allFilesFound: false,
+            tools: [],
+            relevantFiles: [],
+            reasoning: "Failed to parse LLM response"
+          };
+        }
+      }
+    } else {
+      logger.logToolStderr('No JSON-like structure found in the response. Returning default response.');
+      return {
+        allFilesFound: false,
+        tools: [],
+        relevantFiles: [],
+        reasoning: "No valid JSON found in LLM response"
+      };
     }
   }
+}
+
+function cleanJSONString(jsonString: string): string {
+  // Remove any potential leading/trailing non-JSON content
+  jsonString = jsonString.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+  
+  // Escape special characters in string values
+  return jsonString.replace(/("(?:\\.|[^"\\])*")/g, (match) => {
+    return match.replace(/[\n\r\t]/g, (escapeChar) => {
+      switch (escapeChar) {
+        case '\n': return '\\n';
+        case '\r': return '\\r';
+        case '\t': return '\\t';
+        default: return escapeChar;
+      }
+    });
+  });
 }
 
 async function executeTool(tool: Tool, workingDir: string): Promise<FileInfo[]> {
@@ -356,51 +407,51 @@ async function executeTool(tool: Tool, workingDir: string): Promise<FileInfo[]> 
 async function executeToolForFileNames(tool: Tool, workingDir: string): Promise<FileInfo[]> {
   try {
     
-    logger.logMainFlow(`executeToolForFileNames called with tool: ${JSON.stringify(tool)}, workingDir: ${workingDir}`);
+    //logger.logMainFlow(`executeToolForFileNames called with tool: ${JSON.stringify(tool)}, workingDir: ${workingDir}`);
 
     switch (tool.name) {
       case "findFilesByName":
-        logger.logToolExecution(`Executing findFilesByName with pattern: ${tool.params.pattern}`);
+        //logger.logToolExecution(`Executing findFilesByName with pattern: ${tool.params.pattern}`);
         const files = await findFilesByName(tool.params.pattern, workingDir);
         return files.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findFilesByContent":
-        logger.logToolExecution(`Executing findFilesByContent with pattern: ${tool.params.pattern}`);
+        //logger.logToolExecution(`Executing findFilesByContent with pattern: ${tool.params.pattern}`);
         const contentFiles = await findFilesByContent(tool.params.pattern, workingDir);
         return contentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findImportedFiles":
-        logger.logToolExecution(`Executing findImportedFiles with file: ${tool.params.file}`);
+        //logger.logToolExecution(`Executing findImportedFiles with file: ${tool.params.file}`);
         const importedFiles = await findImportedFiles(path.join(workingDir, tool.params.file), workingDir);
         return importedFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findRelatedTests":
-        logger.logToolExecution(`Executing findRelatedTests with file: ${tool.params.file}`);
+        //logger.logToolExecution(`Executing findRelatedTests with file: ${tool.params.file}`);
         const testFiles = await findRelatedTests(path.join(workingDir, tool.params.file), workingDir);
         return testFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findComponentUsage":
-        logger.logToolExecution(`Executing findComponentUsage with component: ${tool.params.component}`);
+        //logger.logToolExecution(`Executing findComponentUsage with component: ${tool.params.component}`);
         const usageFiles = await findComponentUsage(tool.params.component, workingDir);
         return usageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findAPIUsage":
-        logger.logToolExecution(`Calling findAPIUsage with endpoint: ${tool.params.endpoint}`);
+        //logger.logToolExecution(`Calling findAPIUsage with endpoint: ${tool.params.endpoint}`);
         const apiUsageFiles = await findAPIUsage(tool.params.endpoint, workingDir);
         return apiUsageFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findStyleDependencies":
-        logger.logToolExecution(`Executing findStyleDependencies with component: ${tool.params.component}`);
+        //logger.logToolExecution(`Executing findStyleDependencies with component: ${tool.params.component}`);
         const styleFiles = await findStyleDependencies(tool.params.component, workingDir);
         return styleFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findFunctionDefinition":
-        logger.logToolExecution(`Executing findFunctionDefinition with functionName: ${tool.params.functionName}`);
+        //logger.logToolExecution(`Executing findFunctionDefinition with functionName: ${tool.params.functionName}`);
         const functionFiles = await findFunctionDefinition(tool.params.functionName, workingDir);
         return functionFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findDependencies":
-        logger.logToolExecution(`Executing findDependencies with file: ${tool.params.file}`);
+        //logger.logToolExecution(`Executing findDependencies with file: ${tool.params.file}`);
         const dependencyFiles = await findDependencies(path.join(workingDir, tool.params.file), workingDir);
         return dependencyFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findRecentlyModifiedFiles":
-        logger.logToolExecution(`Executing findRecentlyModifiedFiles with days: ${tool.params.days}`);
+        //logger.logToolExecution(`Executing findRecentlyModifiedFiles with days: ${tool.params.days}`);
         const recentFiles = await findRecentlyModifiedFiles(tool.params.days, workingDir);
         return recentFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
       case "findRelatedClasses":
-        logger.logToolExecution(`Executing findRelatedClasses with file: ${tool.params.file}`);
+        //logger.logToolExecution(`Executing findRelatedClasses with file: ${tool.params.file}`);
         const relatedClassFiles = await findRelatedClasses(tool.params.file, workingDir);
         return relatedClassFiles.map(file => ({ name: file, content: '', size: 0, isTypeDefinition: false, isExternalModule: false }));
         case "findExternalDependency":

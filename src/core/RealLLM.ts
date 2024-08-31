@@ -45,7 +45,7 @@ export class RealLLM extends LLMInterface {
 
       const prompt = this.generateCodePrompt(task, toolResults);
 
-      this.logger.logLLMRequest(`Generating code for task: ${task.currentTaskDescription || task.description}`);
+      this.logger.logInfo(`Generating code for task: ${task.currentTaskDescription || task.description}`);
       this.logger.logLLMRequest(`Prompt: ${prompt}`);
 
       try {
@@ -60,7 +60,7 @@ export class RealLLM extends LLMInterface {
           throw new Error('No response received from LLM');
         }
 
-        this.logger.logLLMResponse("Received generate response from LLM");
+        this.logger.logInfo("Received generate response from LLM");
         this.logger.logLLMResponse(`Response: ${response}`);
 
         
@@ -103,7 +103,7 @@ export class RealLLM extends LLMInterface {
 
       const prompt = this.generateAnalysisPrompt(task, toolResults);
 
-      this.logger.logLLMRequest(`Analyzing results for task: ${task.currentTaskDescription || task.description}`);
+      this.logger.logInfo(`Analyzing results for task: ${task.currentTaskDescription || task.description}`);
       this.logger.logLLMRequest(`Prompt: ${prompt}`);
 
       try {
@@ -118,7 +118,7 @@ export class RealLLM extends LLMInterface {
           throw new Error('No response received from LLM');
         }
 
-        this.logger.logLLMResponse("Received analyze response from LLM");
+        this.logger.logInfo("Received analyze response from LLM");
         this.logger.logLLMResponse(`Response: ${response}`);
 
         const parsedResponse = this.parseJSONResponse(response);

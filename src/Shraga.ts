@@ -27,7 +27,7 @@ export class Shraga {
     this.task = task;
     this.config = {
       maxIterations: 10,
-      maxFiles: 20,
+      maxFiles: 30,
       maxTotalSize: 100000,
       logger: Logger.getInstance(),
       ...config
