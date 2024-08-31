@@ -152,6 +152,8 @@ export class RealLLM extends LLMInterface {
 
 
   protected generateCodePrompt(task: Task, toolResults: ToolResults): string {
+    const toolInstructions = this.generateToolInstructions();
+    
     return `
 You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
 
@@ -166,6 +168,9 @@ ${JSON.stringify(task.relevantFilesHistory, null, 2)}
 
 Previous Tool Results:
 ${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${JSON.stringify(result)}`).join('\n\n')}
+
+Tool Instructions:
+${toolInstructions}
 
 Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
 
@@ -212,22 +217,15 @@ Important Instructions:
 3. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
 4. For each file you modify, you MUST use the "updateFile" tool to actually update the file content. Include this in the "toolUsages" array.
 5. After using the "updateFile" tool, include the file details in the "filesHistory" array, including the new version, diff, and change history.
-6. The "updateFile" tool usage should look like this:
-   {
-     "name": "updateFile",
-     "params": {
-       "fileName": "path/to/file.ts",
-       "content": "// New or updated file content"
-     },
-     "reasoning": "Explanation for updating this file"
-   }
-7. Make sure to use the "updateFile" tool for EACH file you modify, before including it in the "filesHistory" array.
+6. Make sure to use the "updateFile" tool for EACH file you modify, before including it in the "filesHistory" array.
 
 Ensure that your response is a valid JSON string.
 `;
   }
 
   protected generateAnalysisPrompt(task: Task, toolResults: ToolResults): string {
+    const toolInstructions = this.generateToolInstructions();
+
     return `
 You are an AI assistant specialized in analyzing TypeScript development results. Your task is to analyze the results of the latest code changes and tool outputs. Here's the relevant information:
 
@@ -245,6 +243,9 @@ ${Object.entries(toolResults).map(([tool, result]) => {
     return `${tool}: ${result}`;
   }
 }).join('\n\n')}
+
+Tool Instructions:
+${toolInstructions}
 
 Based on this information, please analyze the results and provide feedback. Your response should be a JSON object with the following structure:
 

@@ -8,11 +8,11 @@ export async function main(customLogger?: Logger) {
   const logger = customLogger || Logger.getInstance();
 
   try {
-    const defaultProjectRoot = '/Users/shayco/GitHub/temp-playground';
+    const defaultProjectRoot = '/Users/shayco/GitHub/playground/fts-forward-to-shraga';
     const projectRootInput = await cli.askQuestion(`Enter the project directory (default: ${defaultProjectRoot}): `);
     const projectRoot = projectRootInput.trim() || defaultProjectRoot;
 
-    const defaultTask = "add performance log for every function";
+    const defaultTask = "review tests and pass them";
     const taskDescription = await cli.askQuestion(`Enter the task description (default: "${defaultTask}"): `);
     const finalTaskDescription = taskDescription.trim() || defaultTask;
 
