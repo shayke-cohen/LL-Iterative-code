@@ -1,16 +1,16 @@
 {
-    "llm": {
-      "requests": true,
-      "responses": true
-    },
-    "tools": {
-      "execution": true,
-      "stdout": false,
-      "stderr": false
-    },
-    "main": {
-      "flow": true,
-      "iterationProgress": true
-    },
-    "logLevel": "debug"
-  }
+  "llm": {
+    "requests": false,
+    "responses": false
+  },
+  "tools": {
+    "execution": true,
+    "stdout": false,
+    "stderr": false
+  },
+  "main": {
+    "flow": true,
+    "iterationProgress": true
+  },
+  "logLevel": "debug"
+}

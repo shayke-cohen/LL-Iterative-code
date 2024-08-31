@@ -9,6 +9,7 @@ class IterationController {
   
     incrementIteration(): void {
       this.currentIteration++;
+      // console.log(`Iteration ${this.currentIteration} reasoning: ...`);
     }
   
     shouldContinue(taskComplete: boolean): boolean {

@@ -55,7 +55,6 @@ export class ConfigManager {
     try {
       const userConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       this.config = { ...defaultLogConfig, ...userConfig };
-      console.log(`Loaded configuration from ${configPath}`);
     } catch (error) {
       console.error(`Error loading config file: ${error}. Using default configuration.`);
     }
