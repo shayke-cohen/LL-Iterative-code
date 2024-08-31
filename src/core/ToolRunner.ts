@@ -1,11 +1,14 @@
-import { exec } from 'child_process';
-import { File } from './TaskInitializer';
+import { File, FileHistory, FileUpdate, VersionDiff } from './TaskInitializer';
+import { FileHistoryManager } from './FileHistoryManager';
 import { ToolResults, ToolResult, ToolUsage } from './LLMInterface';
+import path from 'path';
+import fs from 'fs';
+import { exec } from 'child_process';
 import { FileManager } from './FileManager';
 import { Logger } from './Logger';
+import { generateDiff } from './fileHistoryUtils';
 import glob from 'glob';
-import fs from 'fs';
-import path from 'path';
+
 
 export class ToolRunner {
   private static fileManager: FileManager;
@@ -57,25 +60,31 @@ export class ToolRunner {
     });
   }
 
-  static async runTools(workingFiles: File[], toolUsages: ToolUsage[]): Promise<{ results: ToolResults; newFiles: File[]; modifiedFiles: string[] }> {
+  static async runTools(toolUsages: ToolUsage[]): Promise<{ 
+    results: ToolResults; 
+    newFiles: File[]; 
+    modifiedFiles: string[]; 
+    updatedFileHistory: FileHistory[] 
+  }> {
     const results: ToolResults = {};
     let newFiles: File[] = [];
     let modifiedFiles: string[] = [];
-
+    let updatedFiles: FileUpdate[] = [];
+  
     if (!toolUsages || toolUsages.length === 0) {
       this.logger.logMainFlow('No tool usages specified. Skipping tool execution.');
-      return { results, newFiles, modifiedFiles };
+      return { results, newFiles, modifiedFiles, updatedFileHistory: [] };
     }
-
+  
     for (const usage of toolUsages) {
       try {
         if (!usage.name) {
           this.logger.logToolStderr('Invalid tool usage: missing tool name');
           continue;
         }
-
+  
         const resultKey = `${usage.name}|${Object.entries(usage.params || {}).map(([key, value]) => `${key}=${value}`).join(',')}`;
-        
+  
         switch (usage.name.toLowerCase()) {
           case 'movefile':
             results[resultKey] = {
@@ -92,15 +101,63 @@ export class ToolRunner {
               message: this.fileManager.deleteFile(usage.params.fileName) ? "File deleted successfully." : "Failed to delete file."
             };
             break;
-          case 'updatefile':
-            results[resultKey] = {
-              success: this.fileManager.updateFile({fileName: usage.params.fileName, contentSnippet: usage.params.content}),
-              message: this.fileManager.updateFile({fileName: usage.params.fileName, contentSnippet: usage.params.content}) ? "File updated successfully." : "Failed to update file."
-            };
-            if (results[resultKey].success) {
-              modifiedFiles.push(usage.params.fileName);
-            }
-            break;
+            case 'updatefile':
+              const fileName = usage.params.fileName;
+              const newContent = usage.params.content;
+              const filePath = path.join(this.projectRoot, fileName);
+              let oldContent = '';
+              let currentVersion = 0;
+        
+              // Read existing file content if the file exists
+              if (fs.existsSync(filePath)) {
+                oldContent = fs.readFileSync(filePath, 'utf-8');
+                const existingFileHistory = updatedFiles.find(uf => uf.file_name === fileName);
+                if (existingFileHistory) {
+                  currentVersion = existingFileHistory.new_version.version;
+                }
+              }
+        
+              const updateResult = this.fileManager.updateFile({fileName, contentSnippet: newContent});
+              results[resultKey] = {
+                success: updateResult,
+                message: updateResult ? "File updated successfully." : "Failed to update file."
+              };
+        
+              if (updateResult) {
+                modifiedFiles.push(fileName);
+                const newVersion = currentVersion + 1;
+                const diff = generateDiff(oldContent, newContent);
+                const newVersionDiff: VersionDiff = {
+                  from_version: currentVersion,
+                  to_version: newVersion,
+                  diff,
+                  comment: `Update from tool execution: ${usage.reasoning}`
+                };
+        
+                const existingFileHistoryIndex = updatedFiles.findIndex(uf => uf.file_name === fileName);
+                if (existingFileHistoryIndex !== -1) {
+                  updatedFiles[existingFileHistoryIndex] = {
+                    file_name: fileName,
+                    new_version: {
+                      version: newVersion,
+                      code: newContent,
+                      diff,
+                      comment: `Update from tool execution: ${usage.reasoning}`
+                    }
+                  };
+                } else {
+                  updatedFiles.push({
+                    file_name: fileName,
+                    new_version: {
+                      version: newVersion,
+                      code: newContent,
+                      diff,
+                      comment: `Update from tool execution: ${usage.reasoning}`
+                    }
+                  });
+                }
+              }
+              break;
           case 'requestfiles':
             const files = await this.requestFiles(usage.params.filePattern);
             newFiles = [...newFiles, ...files];
@@ -134,7 +191,7 @@ export class ToolRunner {
         this.logger.logToolStderr(`Error executing ${usage.name}: ${errorMessage}`);
       }
     }
-
+  
     if (!fs.existsSync(path.join(this.projectRoot, 'node_modules'))) {
       try {
         this.logger.logMainFlow('Installing dependencies...');
@@ -148,12 +205,21 @@ export class ToolRunner {
         };
       }
     }
+  
+    // Update file history using FileHistoryManager
+    const updatedFileHistory = FileHistoryManager.updateFileHistory([], updatedFiles);
 
-    // Run standard tools
+    return { results, newFiles, modifiedFiles, updatedFileHistory };
+  }
+
+  static async runStandardTools(): Promise<ToolResults> {
+    const results: ToolResults = {};
     //const standardTools = ['tsc', 'jest', 'eslint .', 'npm audit'];
     const standardTools = ['tsc', 'jest'];
+
     for (const tool of standardTools) {
       try {
+        this.logger.logMainFlow(`Running standard tool: ${tool}`);
         results[tool] = await ToolRunner.runCommand(`yarn ${tool}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -161,10 +227,11 @@ export class ToolRunner {
           success: false,
           message: `Failed: ${errorMessage}`
         };
+        this.logger.logToolStderr(`Error running standard tool ${tool}: ${errorMessage}`);
       }
     }
 
-    return { results, newFiles, modifiedFiles };
+    return results;
   }
 
   private static async requestFiles(filePattern: string): Promise<File[]> {

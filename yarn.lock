@@ -749,6 +749,11 @@
   dependencies:
     "@babel/types" "^7.20.7"
 
+"@types/diff@^5.2.2":
+  version "5.2.2"
+  resolved "https://npm.dev.wixpress.com/api/npm/npm-repos/@types/diff/-/diff-5.2.2.tgz#d430dbb1da6739f1e2565c2c80b54184d4c77658"
+  integrity sha512-qVqLpd49rmJA2nZzLVsmfS/aiiBpfVE95dHhPVwG0NmSBAt+riPxnj53wq2oBq5m4Q2RF1IWFEUpnZTgrQZfEQ==
+
 "@types/glob@^8.1.0":
   version "8.1.0"
   resolved "https://npm.dev.wixpress.com/api/npm/npm-repos/@types/glob/-/glob-8.1.0.tgz#b63e70155391b0584dce44e7ea25190bbc38f2fc"
@@ -1589,6 +1594,11 @@ diff-sequences@^29.6.3:
   version "29.6.3"
   resolved "https://npm.dev.wixpress.com/api/npm/npm-repos/diff-sequences/-/diff-sequences-29.6.3.tgz#4deaf894d11407c51efc8418012f9e70b84ea921"
   integrity sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==
+
+diff@^6.0.0-beta:
+  version "6.0.0-beta"
+  resolved "https://npm.dev.wixpress.com/api/npm/npm-repos/diff/-/diff-6.0.0-beta.tgz#96872d2648eb309e553699639d1ea588d83e8475"
+  integrity sha512-ZLFOZi58WgvIcAre+bXFmKPx3j9rspGc1nR0pkJLFlbzY1FXPDhJu4sfBSvt4LHTNfPN/yoGy/46GMGxUyXyTQ==
 
 dir-glob@^3.0.1:
   version "3.0.1"

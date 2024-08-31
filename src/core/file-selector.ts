@@ -126,9 +126,27 @@ async function findAndReadFile(fileName: string, workingDir: string): Promise<Fi
       };
     }
   } catch (error) {
-    console.log(`File not found or cannot be read: ${fileName}`);
+    logger.logToolStderr(`File not found or cannot be read: ${fileName}`);
   }
   return null;
+}
+
+const EXCLUDED_FILES = [
+  'yarn.lock',
+  'package-lock.json',
+  '.gitignore',
+  '.env',
+  '.DS_Store',
+  'node_modules',
+  'dist',
+  'build',
+  '.vscode',
+  '.idea'
+];
+
+function shouldExcludeFile(filePath: string): boolean {
+  const fileName = path.basename(filePath);
+  return EXCLUDED_FILES.includes(fileName) || filePath.includes('node_modules');
 }
 
 async function selectRelevantFiles(
@@ -142,7 +160,6 @@ async function selectRelevantFiles(
   let relevantFiles: FileInfo[] = [];
   let iteration = 0;
   let totalSize = 0;
-  const logger = Logger.getInstance();
   const seenFiles = new Set<string>();
 
   while (iteration < maxIterations) {
@@ -152,16 +169,12 @@ async function selectRelevantFiles(
     logger.logMainFlow(`Iteration ${iteration + 1} reasoning:\n${llmResponse.reasoning}`);
     logger.logMainFlow(`Iteration ${iteration + 1} relevant files:\n${JSON.stringify(llmResponse.relevantFiles, null, 2)}`);
 
-    if (llmResponse.allFilesFound) {
-      logger.logMainFlow("LLM indicates all files have been found.");
-      break;
-    }
-
+    // Process tool usages
     for (const tool of llmResponse.tools) {
       try {
         const newFiles = await executeTool(tool, workingDir);
         for (const file of newFiles) {
-          if (!seenFiles.has(file.name) && relevantFiles.length < maxFiles) {
+          if (!seenFiles.has(file.name) && relevantFiles.length < maxFiles && !shouldExcludeFile(file.name)) {
             if (totalSize + file.size <= maxTotalSize) {
               relevantFiles.push(file);
               seenFiles.add(file.name);
@@ -176,9 +189,9 @@ async function selectRelevantFiles(
       }
     }
 
-    // Handle potential files suggested by LLM
+    // Process relevantFiles from LLM response
     for (const suggestedFile of llmResponse.relevantFiles) {
-      if (!seenFiles.has(suggestedFile.name)) {
+      if (!seenFiles.has(suggestedFile.name) && !shouldExcludeFile(suggestedFile.name)) {
         try {
           const fileInfo = await findAndReadFile(suggestedFile.name, workingDir);
           if (fileInfo && relevantFiles.length < maxFiles) {
@@ -211,6 +224,11 @@ async function selectRelevantFiles(
       }
     }
 
+    if (llmResponse.allFilesFound) {
+      logger.logMainFlow("LLM indicates all files have been found.");
+      break;
+    }
+    
     iteration++;
   }
 

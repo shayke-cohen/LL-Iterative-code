@@ -1,4 +1,4 @@
-import { Task, File } from './TaskInitializer';
+import { Task, File, FileHistory } from './TaskInitializer';
 
 export interface ToolResult {
   success: boolean;
@@ -23,6 +23,7 @@ export interface LLMResponse {
   actionsSummary: string;
   relevantFiles: string[];
   newTaskDefinition?: string;
+  filesHistory: FileHistory[];
 }
 
 export abstract class LLMInterface {
@@ -122,8 +123,8 @@ Task Description: ${task.description}
 Relevant Files:
 ${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
 
-Working Files:
-${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+File History:
+${JSON.stringify(task.relevantFilesHistory, null, 2)}
 
 Previous Tool Results:
 ${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${JSON.stringify(result)}`).join('\n\n')}
@@ -145,13 +146,29 @@ Based on this information, please generate or update the TypeScript code. Your r
     "Any questions for the user, if applicable"
   ],
   "isTaskComplete": false,
-  "completionReason": "If isTaskComplete is true, provide a reason here"
+  "completionReason": "If isTaskComplete is true, provide a reason here",
+  "files_history": [
+    {
+      "file_name": "example.ts",
+      "current_version": 2,
+      "version_diffs": [
+        {
+          "from_version": 1,
+          "to_version": 2,
+          "diff": "- old line\n+ new line",
+          "comment": "Explanation of changes made"
+        }
+      ]
+    }
+  ]
 }
 
 Important Instructions:
 1. If you have any questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
 2. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
 3. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
+4. For each file you modify, include its updated history in the "files_history" array, including the new version, diff, and change history.
+5. Make sure to use the "updateFile" tool for EACH file you modify, before including it in the "files_history" array.
 
 Ensure that your response is a valid JSON string.
 `;
@@ -163,8 +180,8 @@ You are an AI assistant specialized in analyzing TypeScript development results.
 
 Task Description: ${task.description}
 
-Current Working Files:
-${task.workingFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
+Current Relevant Files:
+${task.relevantFiles.map((file: File) => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
 
 Tool Results:
 ${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${JSON.stringify(result)}`).join('\n\n')}
@@ -207,7 +224,19 @@ Ensure that your response is a valid JSON string.
 
   protected parseResponse(response: string): LLMResponse {
     try {
-      return JSON.parse(response) as LLMResponse;
+      const parsedResponse = JSON.parse(response) as LLMResponse;
+      // Validate the structure of files_history
+      if (!Array.isArray(parsedResponse.filesHistory)) {
+        throw new Error('files_history must be an array');
+      }
+      parsedResponse.filesHistory.forEach(fileHistory => {
+        if (typeof fileHistory.file_name !== 'string' ||
+            typeof fileHistory.current_version !== 'number' ||
+            !Array.isArray(fileHistory.version_diffs)) {
+          throw new Error('Invalid structure in files_history');
+        }
+      });
+      return parsedResponse;
     } catch (error) {
       throw new Error(`Failed to parse LLM response: ${(error as Error).message}`);
     }

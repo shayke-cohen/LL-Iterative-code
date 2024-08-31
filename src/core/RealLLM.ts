@@ -1,7 +1,8 @@
 import { LLMInterface, ToolResults, LLMResponse } from './LLMInterface';
-import { Task, File } from './TaskInitializer';
+import { Task, File, FileHistory, FileUpdate } from './TaskInitializer';
 import { Logger } from './Logger';
 import { runPrompt } from './runPrompt';
+import { updateFileHistories } from './fileHistoryUtils';
 
 export class RealLLM extends LLMInterface {
   private lastAnalysisRecommendations: string = '';
@@ -44,7 +45,8 @@ export class RealLLM extends LLMInterface {
 
       const prompt = this.generateCodePrompt(task, toolResults);
 
-      this.logger.logInfo(`Generating code for task: ${task.currentTaskDescription || task.description}`);
+      this.logger.logLLMRequest(`Generating code for task: ${task.currentTaskDescription || task.description}`);
+      this.logger.logLLMRequest(`Prompt: ${prompt}`);
 
       try {
         const response = await runPrompt({
@@ -58,12 +60,19 @@ export class RealLLM extends LLMInterface {
           throw new Error('No response received from LLM');
         }
 
-        this.logger.logInfo("Received generate response from LLM");
+        this.logger.logLLMResponse("Received generate response from LLM");
+        this.logger.logLLMResponse(`Response: ${response}`);
 
+        
         try {
           const parsedResponse = this.parseJSONResponse(response);
           if (!parsedResponse.actionsSummary) {
             parsedResponse.actionsSummary = "No actions summary provided";
+          }
+  
+          // Ensure files_history is present in the response
+          if (!parsedResponse.filesHistory) {
+            parsedResponse.filesHistory = [];
           }
 
           if (parsedResponse.toolUsages && parsedResponse.toolUsages.length > 0) {
@@ -86,18 +95,16 @@ export class RealLLM extends LLMInterface {
   }
 
 
-  async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
-    // log
-    this.logger.logInfo("Files for result analysis:");
-    this.logRelevantFiles(task.relevantFiles);
 
+  async analyzeResults(task: Task, toolResults: ToolResults): Promise<LLMResponse> {
     return this.retryOperation(async () => {
       this.logger.logInfo("Files for result analysis:");
       this.logRelevantFiles(task.relevantFiles);
 
       const prompt = this.generateAnalysisPrompt(task, toolResults);
 
-      this.logger.logInfo(`Analyzing results for task: ${task.currentTaskDescription || task.description}`);
+      this.logger.logLLMRequest(`Analyzing results for task: ${task.currentTaskDescription || task.description}`);
+      this.logger.logLLMRequest(`Prompt: ${prompt}`);
 
       try {
         const response = await runPrompt({
@@ -111,7 +118,8 @@ export class RealLLM extends LLMInterface {
           throw new Error('No response received from LLM');
         }
 
-        this.logger.logInfo("Received analyze response from LLM");
+        this.logger.logLLMResponse("Received analyze response from LLM");
+        this.logger.logLLMResponse(`Response: ${response}`);
 
         const parsedResponse = this.parseJSONResponse(response);
 
@@ -124,7 +132,8 @@ export class RealLLM extends LLMInterface {
           completionReason: parsedResponse.completionReason,
           actionsSummary: parsedResponse.actionsSummary || '',
           relevantFiles: parsedResponse.relevantFiles || [],
-          newTaskDefinition: parsedResponse.newTaskDefinition || ''
+          newTaskDefinition: parsedResponse.newTaskDefinition || '',
+          filesHistory: parsedResponse.filesHistory || []
         };
 
         if (llmResponse.isTaskComplete) {
@@ -141,37 +150,24 @@ export class RealLLM extends LLMInterface {
     });
   }
 
+
   protected generateCodePrompt(task: Task, toolResults: ToolResults): string {
     return `
 You are an AI assistant specialized in TypeScript development. Your task is to generate or update code based on the following information:
 
-Original Task Description: ${task.description}
+Task Description: ${task.description}
 Current Task Description: ${task.currentTaskDescription || task.description}
 
 Relevant Files:
 ${task.relevantFiles.map(file => `${file.fileName}:\n${file.contentSnippet}`).join('\n\n')}
 
+File History:
+${JSON.stringify(task.relevantFilesHistory, null, 2)}
+
 Previous Tool Results:
-${Object.entries(toolResults).map(([tool, result]) => {
-  if (typeof result === 'object' && result !== null && 'success' in result) {
-    return `${tool}: ${result.success ? 'Success' : 'Failure'}\nMessage: ${result.message}`;
-  } else {
-    return `${tool}: ${result}`;
-  }
-}).join('\n\n')}
+${Object.entries(toolResults).map(([tool, result]) => `${tool}:\n${JSON.stringify(result)}`).join('\n\n')}
 
-${this.generateToolInstructions()}
-
-Important Instructions:
-1. Focus on addressing the current task description while keeping the original task in mind.
-2. If you need any files that are not provided in the relevant files, use the "requestFiles" tool to ask for them. Be specific with file patterns to avoid requesting too many files.
-3. If you need to create a new file or update an existing one, use the "updateFile" tool.
-4. If you have any new questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
-5. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
-6. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no new questions.
-7. Provide a brief summary of the actions taken in this iteration in the "actionsSummary" field.
-
-Based on this information, please generate or update the TypeScript code to address the current task description. Your response should be a JSON object with the following structure:
+Based on this information, please generate or update the TypeScript code. Your response should be a JSON object with the following structure:
 
 {
   "toolUsages": [
@@ -185,12 +181,47 @@ Based on this information, please generate or update the TypeScript code to addr
     }
   ],
   "questions": [
-    "Any new questions for the user, if applicable"
+    "Any questions for the user, if applicable"
   ],
   "isTaskComplete": false,
   "completionReason": "If isTaskComplete is true, provide a reason here",
-  "actionsSummary": "A brief summary of the actions taken in this iteration"
+  "filesHistory": [
+    {
+      "file_name": "example.ts",
+      "new_version": {
+        "version": 2,
+        "code": "// Updated code content",
+        "diff": "- old line\n+ new line",
+        "comment": "Explanation of changes made"
+      },
+      "change_history": [
+        {
+          "from_version": 1,
+          "to_version": 2,
+          "diff": "- old line\n+ new line",
+          "comment": "Explanation of changes made"
+        }
+      ]
+    }
+  ]
 }
+
+Important Instructions:
+1. If you have any questions, add them to the "questions" array. Each question should be prefixed with a running number (e.g., "1. ", "2. ", etc.).
+2. If there are any questions in the "questions" array, set "isTaskComplete" to false and do not provide a "completionReason".
+3. Only set "isTaskComplete" to true if you are certain that the entire task has been successfully completed and there are no questions.
+4. For each file you modify, you MUST use the "updateFile" tool to actually update the file content. Include this in the "toolUsages" array.
+5. After using the "updateFile" tool, include the file details in the "filesHistory" array, including the new version, diff, and change history.
+6. The "updateFile" tool usage should look like this:
+   {
+     "name": "updateFile",
+     "params": {
+       "fileName": "path/to/file.ts",
+       "content": "// New or updated file content"
+     },
+     "reasoning": "Explanation for updating this file"
+   }
+7. Make sure to use the "updateFile" tool for EACH file you modify, before including it in the "filesHistory" array.
 
 Ensure that your response is a valid JSON string.
 `;
@@ -245,9 +276,12 @@ Ensure that your response is a valid JSON string.
   }
 
   private parseJSONResponse(response: string): LLMResponse {
-    // First, try to parse the entire response as JSON
     try {
-      return JSON.parse(response) as LLMResponse;
+      const parsedResponse = JSON.parse(response);
+      return {
+        ...parsedResponse,
+        filesHistory: parsedResponse.filesHistory || []
+      };
     } catch (error) {
       // If that fails, try to extract the JSON part
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -267,6 +301,10 @@ Ensure that your response is a valid JSON string.
     }
   }
 
+  private updateFileHistory(task: Task, updatedFiles: FileUpdate[]): void {
+    task.relevantFilesHistory = updateFileHistories(task, updatedFiles);
+  }
+  
   private cleanJSONString(jsonString: string): string {
     // Remove any potential leading/trailing non-JSON content
     jsonString = jsonString.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
